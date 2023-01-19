@@ -9,3 +9,135 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+model Sanctioned {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  Sanction SanctionList @relation(fields: [listId], references: [id])
+  listId String @map("list_id") @db.ObjectId
+  
+  firstName   String?
+  middleName  String?
+  lastName    String?
+  title       String?
+  type        String?
+  remark      String? 
+  gender      Gender?
+  designation String?
+  motive      String?
+  reference         String?
+  referenceUe       String? @map("reference_ue")
+  referenceOnu      String? @map("reference_onu")
+  unListType      String? @map("un_list_type")
+  listedOn      String? @map("listed_on")
+  listType String? @map("list_type")
+  submittedBy String? @map("submitted_by")
+  originalName String? @map("original_name")
+  otherNames String[] @default([])
+
+  akas AkaList[]
+  placesOfbird PlaceOfBirthList[] 
+  nationalities NationalityList[]
+  citizenships CitizenshipList[]
+  datesOfBird DateOfBirthList[]
+
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model PlaceOfBirthList {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String @db.ObjectId
+
+  place String?
+  city String?
+  stateOrProvince String?
+  postalCode String?
+  zipCode String?
+  country String?
+  mainEntry Int @default(1)
+
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model DateOfBirthList {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String @db.ObjectId
+
+  date String 
+  mainEntry Int @default(1)
+  comment String?
+  
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model NationalityList {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String  @db.ObjectId
+
+  country String?
+  code String?
+  mainEntry Int @default(1) 
+  
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+} 
+
+model CitizenshipList  {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String @db.ObjectId
+
+  country String? 
+  code String?
+  mainEntry Int? @default(1)
+  
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+} 
+
+model AkaList  {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String @db.ObjectId
+
+  category String?
+  type String?
+  firstName String?
+  middleName String?
+  lastName String?
+  comment String?
+
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+} 
+
+model SanctionList   {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  name String 
+  publicationDate DateTime? @db.Date
+  file String?
+  numberOfLine Int?
+  
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt @default(now())
+
+  santionned Sanctioned[] 
+} 
+
+enum Gender{
+  M
+  F
+}
+

@@ -13,6 +13,12 @@ export class SanctionedController {
   //   return this.sanctionedService.create(createSanctionedDto);
   // }
 
+  @ApiQuery({
+		name: "page",
+		description: "The page number",
+		required: false,
+		type: Number
+	})
   @Get()
   findAll(@Query() query: Record<string, any>) {
     return this.sanctionedService.findAll(query.page);

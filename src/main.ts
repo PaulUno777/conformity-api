@@ -18,7 +18,16 @@ async function bootstrap() {
   SwaggerModule.setup('doc', app, document);
 
   //Cross-origin Configurations
-  app.enableCors();
+  const options = {
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: '*',
+    preflightContinue: true,
+    optionsSuccessStatus: 204,
+    credentials: true,
+  };
+
+  app.enableCors(options);
   
   await app.listen(3000);
   console.log('Application Is Running on port 3000')

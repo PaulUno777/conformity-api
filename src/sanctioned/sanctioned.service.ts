@@ -8,10 +8,13 @@ export class SanctionedService {
 
   async findAll(page?: number): Promise<any> {
     //Elements per page
-    const PER_PAGE = Number(this.config.get('PER_PAGE'));
+    const PER_PAGE : number = Number(this.config.get('PER_PAGE'));
 
-    const currentPage = Math.max(Number(page) || 1, 1);
-    const pageNumber = currentPage - 1;
+    const count: number = await this.prisma.sanctioned.count() | 0;
+    const totalPages = count / Number(this.config.get('PER_PAGE'))
+
+    const currentPage: number = Math.max(Number(page) || 1, 1);
+    const pageNumber : number= currentPage - 1;
 
     //get elements with their corresponding sanction
     const sanctionedData = await this.prisma.sanctioned.findMany({
@@ -27,6 +30,7 @@ export class SanctionedService {
 
     return {
       page: pageNumber + 1,
+      totalPages: totalPages,
       data: sanctionedData,
     };
   }

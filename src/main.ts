@@ -23,7 +23,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: '*',
     preflightContinue: true,
-    optionsSuccessStatus: 204,
+    optionsSuccessStatus: 20,
     credentials: true,
   };
 

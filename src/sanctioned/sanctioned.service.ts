@@ -11,7 +11,6 @@ export class SanctionedService {
     const PER_PAGE : number = Number(this.config.get('PER_PAGE'));
 
     const count: number = await this.prisma.sanctioned.count() | 0;
-    const totalPages = count / Number(this.config.get('PER_PAGE'))
 
     const currentPage: number = Math.max(Number(page) || 1, 1);
     const pageNumber : number= currentPage - 1;
@@ -30,7 +29,7 @@ export class SanctionedService {
 
     return {
       page: pageNumber + 1,
-      totalPages: totalPages,
+      count: count,
       data: sanctionedData,
     };
   }

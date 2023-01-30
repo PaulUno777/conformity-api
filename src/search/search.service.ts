@@ -3,28 +3,41 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SearchService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  async search(text?: string) {
+  async search(text: string) {
     if (text) {
       const result = await this.prisma.sanctioned.aggregateRaw({
         pipeline: [
-          { $match: {
-             $text: { $search: text },
-              
-            } 
+          {
+            $search: {
+              index: "sanctionned_index",
+              text: {
+                query: text,
+                path: [
+                  "firstName",
+                  "lastName",
+                  "middleName",
+                  "otherNames",
+                  "original_name",
+                ],
+                fuzzy: {
+                  maxEdits: 2,
+                },
+              },
+            }
           },
-          // {
-          //   $project: {
-          //     "_id": 1,
-          //     "title": 1,
-          //     'firstName': 1,
-          //     'middleName': 1,
-          //     'lastName': 1,
-          //     'original_name': 1,
-          //     score: { $meta: "searchScore" }
-          //   }
-          // },
+          {
+            $project: {
+              "_id": 1,
+              "title": 1,
+              'firstName': 1,
+              'middleName': 1,
+              'lastName': 1,
+              'original_name': 1,
+              score: { $meta: "searchScore" }
+            }
+          },
           { $limit: 10 },
         ],
       });

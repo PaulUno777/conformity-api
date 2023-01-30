@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, Query, Put } from '@nestjs/
 import { SanctionedService } from './sanctioned.service';
 import { ApiQuery } from '@nestjs/swagger';
 
-@Controller('api/sanctioned')
+@Controller('sanctioned')
 export class SanctionedController {
   constructor(private readonly sanctionedService: SanctionedService) {}
 

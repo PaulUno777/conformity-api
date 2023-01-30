@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api')
 
 
   //Open API Documentation
@@ -15,7 +16,7 @@ async function bootstrap() {
     .build(); 
     
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('doc', app, document);
+  SwaggerModule.setup('api/doc', app, document);
 
   //Cross-origin Configurations
   const options = {

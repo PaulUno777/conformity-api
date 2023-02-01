@@ -1,5 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
+import { SearchDto } from './dto/search.dto';
 import { SearchService } from './search.service';
 
 @Controller('search')
@@ -13,8 +14,7 @@ export class SearchController {
 		type: 'string',
 	})
   @Get()
-  findAll(@Query() query: Record<string, any>) {
-    console.log(String(query.text))
+  findAll(@Query() query: Record<string, any>): Promise<SearchDto> {
     return this.searchService.search(String(query.text));
   }
 

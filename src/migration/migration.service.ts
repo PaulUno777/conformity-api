@@ -1,57 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
-const mysql = require('mysql2/promise');
+import { MigrationHelper } from './migration.helper';
 
 @Injectable()
 export class MigrationService {
   constructor(
-    private configService: ConfigService,
     private prisma: PrismaService,
-  ) {}
+    private helper: MigrationHelper
+  ) { }
 
-  //=========MySQL connector================
-  async mysqlConnect(): Promise<any> {
-    //Get the database connection string from dotenv file
-    const msqlUrl = await JSON.parse(this.configService.get('MYSQL_URL'));
-    //create connection to MySQL
-    return await mysql.createConnection(msqlUrl);
-  }
-
-  //=======algorithm that transform id of type BigInt to MongoDB ObjectId======
-  transformId(id: number): string {
-    if (!id) return '';
-    let tempId: string;
-    let count: number = 0;
-
-    tempId = id.toString();
-    const length = 24 - tempId.length;
-
-    for (let i = 0; i < length; i++) {
-      if (count > 9) count = 0;
-      tempId += count;
-      count++;
-    }
-    return tempId;
-  }
-
-  //=========Main method for all migrations================
+  //=========Main method for all Migrations================
   async migrateAllToMongo() {
     await this.migrateSantionToMongo();
     await this.migrateSantionedToMongo();
-    await this.migratePlaceOfBirthListToMongo();
-    await this.migrateDateOfBirthListToMongo();
-    await this.migrateNationalityListToMongo();
-    await this.migrateCitizenshipListToMongo();
-    await this.migrateAkaListToMongo();
+    this.migratePlaceOfBirthListToMongo();
+    this.migrateDateOfBirthListToMongo();
+    this.migrateNationalityListToMongo();
+    this.migrateCitizenshipListToMongo();
+    this.migrateAkaListToMongo();
 
+    console.log('all migrations complete successfully');
     return { message: 'all migrations complete successfully' };
   }
 
-  //===============Method for AkaList migration=============================
+  //=========Main method for all Updates================
+  async updateAllToMongo() {
+    const resSantion = await this.updateSantionToMongo();
+    const resSantioned = await this.updateSantionedToMongo();
+    const resPlace = await this.updatePlaceOfBirthListToMongo();
+    const resDate = await this.updateDateOfBirthListToMongo();
+    const resNat = await this.updateNationalityListToMongo();
+    const resCit = await this.updateCitizenshipListToMongo();
+    const resAka = await this.updateAkaListToMongo();
+
+    return [resSantion, resSantioned, resPlace, resDate, resNat, resCit, resAka]
+  }
+
+
+  //==== Method for AkaList =============================
+  //------ Make migration --------
   async migrateAkaListToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM aka_lists';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -59,8 +49,8 @@ export class MigrationService {
     //cleanup data
     const cleanData = table.map((elt) => {
       return {
-        id: this.transformId(elt.id),
-        sanctionnedId: this.transformId(elt.sanctioned_id),
+        id: this.helper.transformId(elt.id),
+        sanctionnedId: this.helper.transformId(elt.sanctioned_id),
         category: elt.category,
         type: elt.type,
         firstName: elt.firstname,
@@ -97,11 +87,55 @@ export class MigrationService {
     }
     return { message: 'the migration has already been done' };
   }
+  //----- Update database -------
+  async updateAkaListToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.akaList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM aka_lists WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
 
-  //===============Method for CitizenshipList migration=============================
+    if (table.length > 0) {
+      //cleanup data
+      const cleanData = await table.map((elt) => {
+        return {
+          id: this.helper.transformId(elt.id),
+          sanctionnedId: this.helper.transformId(elt.sanctioned_id),
+          category: elt.category,
+          type: elt.type,
+          firstName: elt.firstname,
+          middleName: elt.middlename,
+          lastName: elt.lastname,
+          comment: elt.comment,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.akaList.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} akaList element(s) updated` };
+    }
+    return { message: 'no akaList\'s element updated' };
+  }
+
+
+  //===== Method for CitizenshipList migration ===========
+  //------ Make migration --------
   async migrateCitizenshipListToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM nationality_lists';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -109,8 +143,8 @@ export class MigrationService {
     //cleanup data
     const cleanData = table.map((elt) => {
       return {
-        id: this.transformId(elt.id),
-        sanctionnedId: this.transformId(elt.sanctioned_id),
+        id: this.helper.transformId(elt.id),
+        sanctionnedId: this.helper.transformId(elt.sanctioned_id),
         country: elt.country,
         code: elt.code,
         mainEntry: elt.main_entry,
@@ -144,11 +178,53 @@ export class MigrationService {
     }
     return { message: 'the migration has already been done' };
   }
+  //----- Update database -------
+  async updateCitizenshipListToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.citizenshipList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
 
-  //===============Method for NationalityList migration=============================
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM nationality_lists WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
+
+    if (table.length > 0) {
+      //cleanup data
+      const cleanData = table.map((elt) => {
+        return {
+          id: this.helper.transformId(elt.id),
+          sanctionnedId: this.helper.transformId(elt.sanctioned_id),
+          country: elt.country,
+          code: elt.code,
+          mainEntry: elt.main_entry,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.citizenshipList.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} citizenshipList element(s) updated` };
+    }
+    return { message: 'no citizenshipList\'s element updated' };
+  }
+
+
+  //==== Method for NationalityList migration ==============
+  //------ Make migration --------
   async migrateNationalityListToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM nationality_lists';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -156,8 +232,8 @@ export class MigrationService {
     //cleanup data
     const cleanData = table.map((elt) => {
       return {
-        id: this.transformId(elt.id),
-        sanctionnedId: this.transformId(elt.sanctioned_id),
+        id: this.helper.transformId(elt.id),
+        sanctionnedId: this.helper.transformId(elt.sanctioned_id),
         country: elt.country,
         code: elt.code,
         mainEntry: elt.main_entry,
@@ -193,11 +269,53 @@ export class MigrationService {
     }
     return { message: 'the migration has already been done' };
   }
+  //----- Update database -------
+  async updateNationalityListToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.nationalityList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
 
-  //===============Method for DateOfBirthList migration=============================
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM nationality_lists WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
+
+    if (table.length > 0) {
+      //cleanup data
+      const cleanData = table.map((elt) => {
+        return {
+          id: this.helper.transformId(elt.id),
+          sanctionnedId: this.helper.transformId(elt.sanctioned_id),
+          country: elt.country,
+          code: elt.code,
+          mainEntry: elt.main_entry,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.nationalityList.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} nationalityList element(s) updated` };
+    }
+    return { message: 'no nationalityList\'s element updated' };
+  }
+
+
+  //====== Method for DateOfBirthList migration ==============
+  //------ Make migration --------
   async migrateDateOfBirthListToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM date_of_birth_lists';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -205,8 +323,8 @@ export class MigrationService {
     //cleanup data
     const cleanData = table.map((elt) => {
       return {
-        id: this.transformId(elt.id),
-        sanctionnedId: this.transformId(elt.sanctioned_id),
+        id: this.helper.transformId(elt.id),
+        sanctionnedId: this.helper.transformId(elt.sanctioned_id),
         date: elt.date,
         comment: elt.comment,
         mainEntry: elt.main_entry,
@@ -242,11 +360,53 @@ export class MigrationService {
     }
     return { message: 'the migration has already been done' };
   }
+  //----- Update database -------
+  async updateDateOfBirthListToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.dateOfBirthList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
 
-  //===============Method for PlaceOfBirthList migration=============================
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM date_of_birth_lists WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
+
+    if (table.lenght > 0) {
+      //cleanup data
+      const cleanData = table.map((elt) => {
+        return {
+          id: this.helper.transformId(elt.id),
+          sanctionnedId: this.helper.transformId(elt.sanctioned_id),
+          date: elt.date,
+          comment: elt.comment,
+          mainEntry: elt.main_entry,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.dateOfBirthList.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} dateOfBirthList element(s) updated` };
+    }
+    return { message: 'no dateOfBirthList\'s element updated' };
+  }
+
+
+  //===== Method for PlaceOfBirthList migration ================
+  //------ Make migration --------
   async migratePlaceOfBirthListToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM place_of_birth_lists';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -254,8 +414,8 @@ export class MigrationService {
     //cleanup data
     const cleanData = table.map((elt) => {
       return {
-        id: this.transformId(elt.id),
-        sanctionnedId: this.transformId(elt.sanctioned_id),
+        id: this.helper.transformId(elt.id),
+        sanctionnedId: this.helper.transformId(elt.sanctioned_id),
         place: elt.place,
         city: elt.city,
         stateOrProvince: elt.state_or_province,
@@ -290,11 +450,58 @@ export class MigrationService {
 
     return { message: 'the migration has already been done' };
   }
+  //----- Update database -------
+  async updatePlaceOfBirthListToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.placeOfBirthList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
 
-  //===============Method for sanctioned migration=============================
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM place_of_birth_lists WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
+
+    if (table.length > 0) {
+      //cleanup data
+      const cleanData = table.map((elt) => {
+        return {
+          id: this.helper.transformId(elt.id),
+          sanctionnedId: this.helper.transformId(elt.sanctioned_id),
+          place: elt.place,
+          city: elt.city,
+          stateOrProvince: elt.state_or_province,
+          postalCode: elt.postal_code,
+          zipCode: elt.zip_code,
+          country: elt.country,
+          mainEntry: elt.main_entry,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.placeOfBirthList.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} placeOfBirthList element(s) updated` };
+    }
+    return { message: 'no placeOfBirthList\'s element updated' };
+  }
+
+
+  //===== Method for sanctioned migration ========================
+  //------ Make migration --------
   async migrateSantionedToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM sanctioned';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -309,8 +516,8 @@ export class MigrationService {
       if (elt.name5 != null) otherNames.push(elt.name5);
       if (elt.name6 != null) otherNames.push(elt.name6);
       return {
-        id: this.transformId(elt.id),
-        listId: this.transformId(elt.list_id),
+        id: this.helper.transformId(elt.id),
+        listId: this.helper.transformId(elt.list_id),
         firstName: elt.firstname,
         middleName: elt.middlename,
         lastName: elt.lastname,
@@ -362,11 +569,74 @@ export class MigrationService {
 
     return { message: 'the migration has already been done' };
   }
+  //----- Update database -------
+  async updateSantionedToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.sanctioned.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM sanctioned WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
 
-  //===============Method for sanctionList migration=============================
+    if (table.length > 0) {
+      //cleanup data
+      const cleanData = table.map((elt) => {
+        let otherNames = [];
+        if (elt.name1 != null) otherNames.push(elt.name1);
+        if (elt.name3 != null) otherNames.push(elt.name3);
+        if (elt.name2 != null) otherNames.push(elt.name2);
+        if (elt.name4 != null) otherNames.push(elt.name4);
+        if (elt.name5 != null) otherNames.push(elt.name5);
+        if (elt.name6 != null) otherNames.push(elt.name6);
+        return {
+          id: this.helper.transformId(elt.id),
+          listId: this.helper.transformId(elt.list_id),
+          firstName: elt.firstname,
+          middleName: elt.middlename,
+          lastName: elt.lastname,
+          title: elt.title,
+          type: elt.type,
+          remark: elt.remark,
+          gender: elt.gender,
+          designation: elt.designation,
+          motive: elt.motive,
+          reference: elt.ref,
+          referenceUe: elt.ref_ue,
+          referenceOnu: elt.onu,
+          unListType: elt.un_list_type,
+          listedOn: elt.listed_on,
+          listType: elt.list_type,
+          submittedBy: elt.submitted_by,
+          originalName: elt.original_name,
+          otherNames: otherNames,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.sanctioned.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} sanctioned element(s) updated` };
+    }
+    return { message: 'no sanctioned\'s element updated' };
+  }
+
+
+  //==== Method for sanctionList migration =========================
+  //------ Make migration --------
   async migrateSantionToMongo() {
     //Get data from MYSQL
-    const connection = await this.mysqlConnect();
+    const connection = await this.helper.mysqlConnect();
     const querie = 'SELECT * FROM sanction_lists';
     const [table] = await connection.execute(querie);
     connection.close();
@@ -374,7 +644,7 @@ export class MigrationService {
     //cleanup data
     const cleanData = table.map((elt) => {
       return {
-        id: this.transformId(elt.id),
+        id: this.helper.transformId(elt.id),
         name: elt.name,
         publicationDate: elt.publication_date,
         file: elt.file,
@@ -403,5 +673,46 @@ export class MigrationService {
     }
 
     return { message: 'the migration has already been done' };
+  }
+  //----- Update database -------
+  async updateSantionToMongo() {
+    //Get the last updated element from mongoDB
+    const result = await this.prisma.sanctionList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const lastDate = this.helper.transformDate(result.updatedAt);
+
+    //Get data from MYSQL
+    const connection = await this.helper.mysqlConnect();
+    const querie = `SELECT * FROM sanction_lists WHERE updated_at > '${lastDate}'`;
+    const [table] = await connection.execute(querie);
+    connection.close();
+
+    if (table.length > 0) {
+      //cleanup data
+      const cleanData = table.map((elt) => {
+        return {
+          id: this.helper.transformId(elt.id),
+          name: elt.name,
+          publicationDate: elt.publication_date,
+          file: elt.file,
+          numberOfLine: elt.number_of_line,
+          updatedAt: elt.updated_at,
+          createdAt: elt.created_at,
+        };
+      });
+
+      //update data in mongo database
+      let count = 0
+      for (let i = 0; i < cleanData.length; i++) {
+        const { id, ...element } = cleanData[i];
+        await this.prisma.sanctionList.upsert({
+          where: { id: cleanData[i].id },
+          update: element,
+          create: element,
+        });
+        count += 1;
+      }
+      return { message: `${count} sanctionList element(s) updated` };
+    }
+    return { message: 'no sanctionList\'s element updated' };
   }
 }

@@ -14,130 +14,129 @@ model Sanctioned {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   Sanction SanctionList @relation(fields: [listId], references: [id])
-  listId String @map("list_id") @db.ObjectId
-  
-  firstName   String?
-  middleName  String?
-  lastName    String?
-  title       String?
-  type        String?
-  remark      String? 
-  gender      Gender?
-  designation String?
-  motive      String?
-  reference         String?
-  referenceUe       String? @map("reference_ue")
-  referenceOnu      String? @map("reference_onu")
-  unListType      String? @map("un_list_type")
-  listedOn      String? @map("listed_on")
-  listType String? @map("list_type")
-  submittedBy String? @map("submitted_by")
-  originalName String? @map("original_name")
-  otherNames String[] @default([])
+  listId   String       @map("list_id") @db.ObjectId
 
-  akas AkaList[]
-  placesOfbird PlaceOfBirthList[] 
+  firstName    String?
+  middleName   String?
+  lastName     String?
+  title        String?
+  type         String?
+  remark       String?
+  gender       Gender?
+  designation  String?
+  motive       String?
+  reference    String?
+  referenceUe  String?  @map("reference_ue")
+  referenceOnu String?  @map("reference_onu")
+  unListType   String?  @map("un_list_type")
+  listedOn     String?  @map("listed_on")
+  listType     String?  @map("list_type")
+  submittedBy  String?  @map("submitted_by")
+  originalName String?  @map("original_name")
+  otherNames   String[] @default([])
+
+  akas          AkaList[]
+  placesOfbird  PlaceOfBirthList[]
   nationalities NationalityList[]
-  citizenships CitizenshipList[]
-  datesOfBird DateOfBirthList[]
+  citizenships  CitizenshipList[]
+  datesOfBird   DateOfBirthList[]
 
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model PlaceOfBirthList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
-  sanctionnedId String @db.ObjectId
+  sanctionned   Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String     @db.ObjectId
 
-  place String?
-  city String?
+  place           String?
+  city            String?
   stateOrProvince String?
-  postalCode String?
-  zipCode String?
-  country String?
-  mainEntry Int @default(1)
+  postalCode      String?
+  zipCode         String?
+  country         String?
+  mainEntry       Int     @default(1)
 
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model DateOfBirthList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
-  sanctionnedId String @db.ObjectId
+  sanctionned   Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String     @db.ObjectId
 
-  date String 
-  mainEntry Int @default(1)
-  comment String?
-  
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
+  date      String
+  mainEntry Int     @default(1)
+  comment   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model NationalityList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
-  sanctionnedId String  @db.ObjectId
+  sanctionned   Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String     @db.ObjectId
 
-  country String?
-  code String?
-  mainEntry Int @default(1) 
-  
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
-} 
+  country   String?
+  code      String?
+  mainEntry Int     @default(1)
 
-model CitizenshipList  {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model CitizenshipList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
-  sanctionnedId String @db.ObjectId
+  sanctionned   Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String     @db.ObjectId
 
-  country String? 
-  code String?
-  mainEntry Int? @default(1)
-  
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
-} 
+  country   String?
+  code      String?
+  mainEntry Int?    @default(1)
 
-model AkaList  {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model AkaList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  sanctionned Sanctioned @relation(fields: [sanctionnedId], references: [id])
-  sanctionnedId String @db.ObjectId
+  sanctionned   Sanctioned @relation(fields: [sanctionnedId], references: [id])
+  sanctionnedId String     @db.ObjectId
 
-  category String?
-  type String?
-  firstName String?
+  category   String?
+  type       String?
+  firstName  String?
   middleName String?
-  lastName String?
-  comment String?
+  lastName   String?
+  comment    String?
 
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
-} 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
 
-model SanctionList   {
+model SanctionList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  name String 
+  name            String
   publicationDate DateTime? @db.Date
-  file String?
-  numberOfLine Int?
-  
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt @default(now())
+  file            String?
+  numberOfLine    Int?
 
-  santionned Sanctioned[] 
-} 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-enum Gender{
+  santionned Sanctioned[]
+}
+
+enum Gender {
   M
   F
 }
-

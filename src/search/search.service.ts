@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SearchDto } from './dto/search.dto';
+import { SearchDto } from './dto/search.output.dto';
 import { SearchHelper } from './search.helper';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class SearchService {
         pipeline: [
           {
             $search: {
-              index: '',
+              index:'sanctionned_index',
               text: {
                 query: text,
                 path: [

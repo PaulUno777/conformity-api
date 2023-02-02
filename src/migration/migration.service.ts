@@ -11,16 +11,15 @@ export class MigrationService {
 
   //=========Main method for all Migrations================
   async migrateAllToMongo() {
-    await this.migrateSantionToMongo();
-    await this.migrateSantionedToMongo();
-    this.migratePlaceOfBirthListToMongo();
-    this.migrateDateOfBirthListToMongo();
-    this.migrateNationalityListToMongo();
-    this.migrateCitizenshipListToMongo();
-    this.migrateAkaListToMongo();
+    const resSantion = await this.migrateSantionToMongo();
+    const resSantioned = await this.migrateSantionedToMongo();
+    const resPlace = await this.migratePlaceOfBirthListToMongo();
+    const resDate = await this.migrateDateOfBirthListToMongo();
+    const resNat = await this.migrateNationalityListToMongo();
+    const resCit = await this.migrateCitizenshipListToMongo();
+    const resAka = await this.migrateAkaListToMongo();
 
-    console.log('all migrations complete successfully');
-    return { message: 'all migrations complete successfully' };
+    return [resSantion, resSantioned, resPlace, resDate, resNat, resCit, resAka];
   }
 
   //=========Main method for all Updates================
@@ -62,30 +61,25 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.akaList.create({ data: cleanData[0] });
-
     // // test we have alreading migrate data
     const testData = await this.prisma.akaList.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
     if (!testData) {
       let data: any[];
       let result;
-      for (let i = 1; i <= cleanData.length; i += 1000) {
+      let count = 0;
+      for (let i = 0; i <= cleanData.length; i += 1000) {
         if (i >= cleanData.length) i = cleanData.length;
         data = cleanData.slice(i, i + 1000);
         if (data.length > 0) {
           result = await this.prisma.akaList.createMany({ data: data });
         }
-        console.log({
-          message: 'AkaList successfully migrated',
-          result: result,
-        });
+        count += result;
       }
-      return result;
+      return { message: `${count} AkaList element(s) migrated` };
     }
-    return { message: 'the migration has already been done' };
+    return { message: 'no AkaList\'s element migrated' };
   }
   //----- Update database -------
   async updateAkaListToMongo() {
@@ -153,30 +147,26 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.citizenshipList.create({ data: cleanData[0] });
-
     // // test we have alreading migrate data
     const testData = await this.prisma.citizenshipList.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
+
     if (!testData) {
       let data: any[];
       let result;
-      for (let i = 1; i <= cleanData.length; i += 1000) {
+      let count = 0;
+      for (let i = 0; i <= cleanData.length; i += 1000) {
         if (i >= cleanData.length) i = cleanData.length;
         data = cleanData.slice(i, i + 1000);
         if (data.length > 0) {
           result = await this.prisma.citizenshipList.createMany({ data: data });
         }
-        console.log({
-          message: 'CitizenshipList successfully migrated',
-          result: result,
-        });
+        count += result;
       }
-      return result;
+      return { message: `${count} citizenshipList element(s) migrated` };
     }
-    return { message: 'the migration has already been done' };
+    return { message: 'no citizenshipList\'s element migrated' };
   }
   //----- Update database -------
   async updateCitizenshipListToMongo() {
@@ -242,32 +232,27 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.nationalityList.create({ data: cleanData[0] });
-
     // // test we have alreading migrate data
     const testData = await this.prisma.nationalityList.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
 
     //push data in data in batches of 1000 to avoid errors and timeouts
     if (!testData) {
       let data: any[];
       let result;
-      for (let i = 1; i <= cleanData.length; i += 1000) {
+      let count = 0;
+      for (let i = 0; i <= cleanData.length; i += 1000) {
         if (i >= cleanData.length) i = cleanData.length;
         data = cleanData.slice(i, i + 1000);
         if (data.length > 0) {
           result = await this.prisma.nationalityList.createMany({ data: data });
         }
-        console.log({
-          message: 'NationalityList successfully migrated',
-          result: result,
-        });
+        count += result;
       }
-      return result;
+      return { message: `${count} nationalityList element(s) migrated` };
     }
-    return { message: 'the migration has already been done' };
+    return { message: 'no nationalityList\'s element migrated' };
   }
   //----- Update database -------
   async updateNationalityListToMongo() {
@@ -333,32 +318,27 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.dateOfBirthList.create({ data: cleanData[0] });
-
     // // test we have alreading migrate data
     const testData = await this.prisma.dateOfBirthList.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
 
     //push data in data in batches of 1000 to avoid errors and timeouts
     if (!testData) {
       let data: any[];
       let result;
-      for (let i = 1; i <= cleanData.length; i += 1000) {
+      let count = 0;
+      for (let i = 0; i <= cleanData.length; i += 1000) {
         if (i >= cleanData.length) i = cleanData.length;
         data = cleanData.slice(i, i + 1000);
         if (data.length > 0) {
           result = await this.prisma.dateOfBirthList.createMany({ data: data });
         }
-        console.log({
-          message: 'DateOfBirthList successfully migrated',
-          result: result,
-        });
+        count += result;
       }
-      return result;
+      return { message: `${count} dateOfBirthList element(s) migrated` };
     }
-    return { message: 'the migration has already been done' };
+    return { message: 'no dateOfBirthList\'s element migrated' };
   }
   //----- Update database -------
   async updateDateOfBirthListToMongo() {
@@ -428,27 +408,20 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.placeOfBirthList.create({ data: cleanData[0] });
-    const data = cleanData.slice(1);
 
     // // test we have alreading migrate data
     const testData = await this.prisma.placeOfBirthList.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
 
     if (!testData) {
       const result = await this.prisma.placeOfBirthList.createMany({
-        data: data,
+        data: cleanData,
       });
-      console.log({
-        message: 'PlaceOfBirthList successfully migrated',
-        result: result,
-      });
-      return result;
+      return { message: `${result} placeOfBirthList element(s) migrated` };
     }
 
-    return { message: 'the migration has already been done' };
+    return { message: 'no placeOfBirthList\'s element migrated' };
   }
   //----- Update database -------
   async updatePlaceOfBirthListToMongo() {
@@ -541,33 +514,29 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.sanctioned.create({ data: cleanData[0] });
 
     // test we have alreading migrate data
     const testData = await this.prisma.sanctioned.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
 
     //push data in data in batches of 1000 to avoid errors and timeouts
     if (!testData) {
       let data: any[];
       let result;
-      for (let i = 1; i <= cleanData.length; i += 1000) {
+      let count = 0;
+      for (let i = 0; i <= cleanData.length; i += 1000) {
         if (i >= cleanData.length) i = cleanData.length;
         data = cleanData.slice(i, i + 1000);
         if (data.length > 0) {
           result = await this.prisma.sanctioned.createMany({ data: data });
         }
-        console.log({
-          message: 'sanctioned successfully migrated',
-          result: result,
-        });
+        count += result;
       }
-      return result;
+      return { message: `${count} sanctioned element(s) migrated` };
     }
 
-    return { message: 'the migration has already been done' };
+    return { message: 'no sanctioned\'s element migrated' };
   }
   //----- Update database -------
   async updateSantionedToMongo() {
@@ -654,25 +623,17 @@ export class MigrationService {
       };
     });
 
-    //push frist data to generate schema
-    await this.prisma.sanctionList.create({ data: cleanData[0] });
-    const data = cleanData.slice(1);
-
     // // test we have alreading migrate data
     const testData = await this.prisma.sanctionList.findUnique({
-      where: { id: cleanData[1].id },
+      where: { id: cleanData[0].id },
     });
 
     if (!testData) {
-      const result = await this.prisma.sanctionList.createMany({ data: data });
-      console.log({
-        message: 'sanctionList successfully migrated',
-        result: result,
-      });
-      return result;
-    }
+      const result = await this.prisma.sanctionList.createMany({ data: cleanData });
 
-    return { message: 'the migration has already been done' };
+      return { message: `${result} sanctionList element(s) migrated` };
+    }
+    return { message: 'no sanctionList\'s element migrated' };
   }
   //----- Update database -------
   async updateSantionToMongo() {

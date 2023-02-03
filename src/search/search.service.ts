@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchDto } from './dto/search.output.dto';
 import { SearchHelper } from './search.helper';
+import { SearchCompleteDto } from './dto/search.complete.dto';
 
 @Injectable()
 export class SearchService {
@@ -70,5 +71,32 @@ export class SearchService {
     throw { message: 'you must provide a query text parameter' };
   }
 
-  //how to implement fuzzy search in mongoDb
+  async searchComplete(body: SearchCompleteDto){
+    let pipeline = []
+    let fullName = '';
+    if(body.firstName) fullName += body.firstName;
+    if(body.middleName) fullName += (' '+body.middleName);
+    if(body.lastName) fullName += (' '+body.lastName);
+    console.log(fullName);
+    const searchResult: any = await this.prisma.sanctioned.aggregateRaw({
+      pipeline: [
+        {
+          $match:{
+            $text:
+            {
+              $search: fullName,
+            }
+          }
+          
+        }
+      ]
+    });
+
+    const result = await searchResult.map((elt) => {
+      const cleanData = this.helper.mapSearch(elt);
+      return cleanData;
+    })
+
+    return result;
+  }
 }

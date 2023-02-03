@@ -1,10 +1,13 @@
-import { Controller, Get, Query, Post } from '@nestjs/common';
-import { ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Query, Post, Body } from '@nestjs/common';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { SearchDto } from './dto/search.output.dto';
 import { SearchService } from './search.service';
+import { SearchCompleteDto } from './dto/search.complete.dto';
 
 @Controller('search')
+@ApiTags('search')
 export class SearchController {
+
   constructor(private readonly searchService: SearchService) {}
 
   @ApiQuery({
@@ -13,14 +16,14 @@ export class SearchController {
 		required: true,
 		type: 'string',
 	})
-  @Get('')
+  @Get()
   findAll(@Query() query: Record<string, any>): Promise<SearchDto> {
     return this.searchService.search(String(query.text));
   }
 
-  @Post('complete')
-  findComplete(@Query() query: Record<string, any>): Promise<SearchDto> {
-    return this.searchService.search(String(query.text));
+  @Post()
+  findComplete(@Body() body: SearchCompleteDto): Promise<SearchDto> {
+    return this.searchService.searchComplete(body);
   }
 
 }

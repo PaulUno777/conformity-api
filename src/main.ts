@@ -11,14 +11,13 @@ async function bootstrap() {
 
   //Open API Documentation
   const config = new DocumentBuilder()
-    .setTitle('KAMIX Conformity API')
-    .setDescription('KAMIX Conformity API')
+    .setTitle('KAMIX Conformity Application')
+    .setDescription('KAMIX Conformity Rest API Docs')
     .setVersion('1.0')
-    .addTag('Conformity')
     .build(); 
     
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/doc', app, document);
+  SwaggerModule.setup('api', app, document);
 
   //Cross-origin Configurations
   const options = {

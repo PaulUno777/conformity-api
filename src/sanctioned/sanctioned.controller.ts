@@ -1,8 +1,9 @@
 import { Controller, Get, Post, Body, Param, Delete, Query, Put } from '@nestjs/common';
 import { SanctionedService } from './sanctioned.service';
-import { ApiQuery } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @Controller('sanctioned')
+@ApiTags('sanctioned')
 export class SanctionedController {
   constructor(private readonly sanctionedService: SanctionedService) {}
 

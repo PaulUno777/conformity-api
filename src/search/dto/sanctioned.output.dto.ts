@@ -1,6 +1,6 @@
 import { SanctionedType } from "../type/sanctioned.type";
 
-export class SearchDto {
-    data: SanctionedType;
+export class SanctionedDto {
+    entity: SanctionedType;
     score: number;
 }

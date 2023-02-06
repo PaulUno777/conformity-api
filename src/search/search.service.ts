@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SearchDto } from './dto/search.output.dto';
+import { SanctionedDto } from './dto/sanctioned.output.dto';
 import { SearchHelper } from './search.helper';
 import { SearchCompleteDto } from './dto/search.complete.dto';
+import { AkaDto } from './dto/alias.output.dto';
 
 @Injectable()
 export class SearchService {
   constructor(private prisma: PrismaService, private helper: SearchHelper) { }
 
-  async search(text: string): Promise<SearchDto> {
+  async search(text: string) {
     if (text) {
-      const searchResult: any = await this.prisma.sanctioned.aggregateRaw({
+      const sanctionedResult: any = await this.prisma.sanctioned.aggregateRaw({
         pipeline: [
           {
             $search: {
-              index:'sanctionned_index',
+              index: 'sanctionned_index',
               text: {
                 query: text,
                 path: [
@@ -32,7 +33,7 @@ export class SearchService {
           },
           {
             $project: {
-              "list_id":1,
+              "list_id": 1,
               "firstName": 1,
               "middleName": 1,
               "lastName": 1,
@@ -59,41 +60,86 @@ export class SearchService {
           { $limit: 10 },
         ],
       });
-      
-      const result = await searchResult.map((elt) => {
-        const cleanData = this.helper.mapSearch(elt);
+
+      const akaResult: any = await this.prisma.akaList.aggregateRaw({
+        pipeline: [
+          {
+            $search: {
+              index: 'sanctioned_aka_index',
+              text: {
+                query: text,
+                path: [
+                  "firstName",
+                  "lastName",
+                  "middleName",
+                ],
+                fuzzy: {
+                  maxEdits: 2,
+                },
+              },
+            }
+          },
+          {
+            $project: {
+              "sanctionnedId": 1,
+              "firstName": 1,
+              "middleName": 1,
+              "lastName": 1,
+              "category": 1,
+              "type": 1,
+              "comment": 1,
+              "updatedAt": 1,
+              "createdAt": 1,
+              score: { $meta: "searchScore" }
+            }
+          },
+          { $limit: 10 },
+        ],
+      });
+
+      //clean data and map before sending
+      const sanctionedClean = await sanctionedResult.map((elt) => {
+        const cleanData = this.helper.mapSanctioned(elt);
         return cleanData;
       })
 
-      return result;
+      const akaClean = await akaResult.map((elt) => {
+        const cleanData = this.helper.mapAka(elt);
+        return cleanData;
+      })
+
+      return {
+        sanctioned: sanctionedClean,
+        aka: akaClean
+      };
     }
 
     throw { message: 'you must provide a query text parameter' };
   }
 
-  async searchComplete(body: SearchCompleteDto){
+  async searchComplete(body: SearchCompleteDto) {
     let pipeline = []
     let fullName = '';
-    if(body.firstName) fullName += body.firstName;
-    if(body.middleName) fullName += (' '+body.middleName);
-    if(body.lastName) fullName += (' '+body.lastName);
+    if (body.firstName) fullName += body.firstName;
+    if (body.middleName) fullName += (' ' + body.middleName);
+    if (body.lastName) fullName += (' ' + body.lastName);
     console.log(fullName);
-    const searchResult: any = await this.prisma.sanctioned.aggregateRaw({
+    const searchResult: any = await this.prisma.akaList.aggregateRaw({
       pipeline: [
         {
-          $match:{
+          $match: {
             $text:
             {
               $search: fullName,
             }
           }
-          
+
         }
       ]
     });
 
     const result = await searchResult.map((elt) => {
-      const cleanData = this.helper.mapSearch(elt);
+      const cleanData = this.helper.mapSanctioned(elt);
       return cleanData;
     })
 

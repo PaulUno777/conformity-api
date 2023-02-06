@@ -1,6 +1,5 @@
 import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { SearchDto } from './dto/search.output.dto';
 import { SearchService } from './search.service';
 import { SearchCompleteDto } from './dto/search.complete.dto';
 
@@ -17,12 +16,12 @@ export class SearchController {
 		type: 'string',
 	})
   @Get()
-  findAll(@Query() query: Record<string, any>): Promise<SearchDto> {
+  findAll(@Query() query: Record<string, any>) {
     return this.searchService.search(String(query.text));
   }
 
   @Post()
-  findComplete(@Body() body: SearchCompleteDto): Promise<SearchDto> {
+  findComplete(@Body() body: SearchCompleteDto) {
     return this.searchService.searchComplete(body);
   }
 

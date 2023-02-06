@@ -1,10 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { SearchDto } from "./dto/search.output.dto";
+import { AkaDto } from "./dto/alias.output.dto";
+import { SanctionedDto } from './dto/sanctioned.output.dto';
 
 @Injectable()
 export class SearchHelper {
-    mapSearch(result: any): SearchDto {
-        const data = {
+    mapSanctioned(result: any):SanctionedDto {
+        const entity = {
             id: result._id.$oid,
             listId: result.list_id.$oid,
             firstName: result.firstName,
@@ -31,6 +32,25 @@ export class SearchHelper {
 
         const score: number = (result.score);
 
-        return { data, score };
+        return { entity, score };
+    }
+
+    mapAka(result: any): AkaDto {
+        const entity = {
+            id: result._id.$oid,
+            sanctionedId: result.sanctionnedId.$oid,
+            category: result.category,
+            type: result.type,
+            firstName: result.firstName,
+            middleName: result.middleName,
+            lastName: result.lastName,
+            comment: result.comment,
+            createdAt: result.createdAt.$date,
+            updatedAt: result.updatedAt.$date
+        }
+
+        const score: number = (result.score);
+
+        return { entity, score };
     }
 }

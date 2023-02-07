@@ -16,6 +16,12 @@ export class NationalityService {
 
 
   removeDuplicates(array: any[]) {
-    return array.filter((item, index) => array.indexOf(item) === index)
+    let filtered =[];
+    array.forEach((item) => {
+      if(!filtered.includes(item.country)){
+        filtered.push(item.country);
+      }
+    });
+    return filtered;
   }
 }

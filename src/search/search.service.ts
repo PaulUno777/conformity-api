@@ -4,6 +4,7 @@ import { SanctionedDto } from './dto/sanctioned.output.dto';
 import { SearchHelper } from './search.helper';
 import { SearchCompleteDto } from './dto/search.complete.dto';
 import { AkaDto } from './dto/alias.output.dto';
+import { pipeline } from 'stream';
 
 @Injectable()
 export class SearchService {
@@ -110,7 +111,7 @@ export class SearchService {
 
       return {
         sanctioned: sanctionedClean,
-        aka: akaClean
+        alias: akaClean
       };
     }
 
@@ -118,31 +119,81 @@ export class SearchService {
   }
 
   async searchComplete(body: SearchCompleteDto) {
-    let pipeline = []
+    let sanctionedPipeline = [];
+    let akaPipeline = [];
+
     let fullName = '';
     if (body.firstName) fullName += body.firstName;
     if (body.middleName) fullName += (' ' + body.middleName);
     if (body.lastName) fullName += (' ' + body.lastName);
-    console.log(fullName);
-    const searchResult: any = await this.prisma.akaList.aggregateRaw({
-      pipeline: [
-        {
-          $match: {
-            $text:
-            {
-              $search: fullName,
-            }
-          }
 
+    if (fullName != '') {
+      //push the first stage in the pipeline
+      sanctionedPipeline.push({
+        $search: {
+          index: 'sanctionned_index',
+          text: {
+            query: fullName,
+            path: [
+              "firstName",
+              "lastName",
+              "middleName",
+              "otherNames",
+              "original_name",
+            ],
+            fuzzy: {
+              maxEdits: 2,
+            },
+          },
         }
-      ]
-    });
+      });
 
-    const result = await searchResult.map((elt) => {
-      const cleanData = this.helper.mapSanctioned(elt);
-      return cleanData;
-    })
+      //push the DOB filter stage in the pipeline
+      if (body.dob) {
+        sanctionedPipeline.push({
+            $lookup: {
+              from: "DateOfBirthList",
+              let: {
+                id: "$_id",
+              },
+              pipeline: [{
+                $match: {
+                  $expr: {
+                    $eq: ["$sanctionnedId", "$$id"],
+                  },
+                },
+              },],
+              as: "dateOfBirth",
+            }
+          });
+      }
 
-    return result;
+      //push the DOB filter stage in the pipeline
+      if (body.nationality) {
+        sanctionedPipeline.push({
+          $lookup: {
+            from: "NationalityList",
+            let: {
+              id: "$_id",
+            },
+            pipeline: [{
+              $match: {
+                $expr: {
+                  $eq: ["$sanctionnedId", "$$id"],
+                },
+              },
+            },],
+            as: "nationality",
+          }
+        });
+      }
+
+      sanctionedPipeline.push({ $limit: 10 });
+    }
+
+    console.log(sanctionedPipeline);
+    const sanctionedResult = await this.prisma.sanctioned.aggregateRaw( {pipeline: sanctionedPipeline})
+
+    return sanctionedResult;
   }
 }

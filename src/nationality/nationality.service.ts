@@ -8,7 +8,12 @@ export class NationalityService {
   async findAll() {
 
     const nationalities = await this.prisma.nationalityList.findMany(
-      {select: {country: true}}
+      {
+        select: {country: true},
+        orderBy: {
+          country: 'asc',
+        },
+      },
     );
     const cleanNationalities = this.removeDuplicates(nationalities)
     return {data: cleanNationalities};
@@ -18,7 +23,7 @@ export class NationalityService {
   removeDuplicates(array: any[]) {
     let filtered =[];
     array.forEach((item) => {
-      if(!filtered.includes(item.country)){
+      if(!filtered.includes(item.country) && item.country != null){
         filtered.push(item.country);
       }
     });

@@ -15,10 +15,11 @@ export class SanctionedService {
     const currentPage: number = Math.max(Number(page) || 1, 1);
     const pageNumber : number= currentPage - 1;
 
+    let lastPage = Math.ceil((count/PER_PAGE));
     let prev = null;
-    let next = currentPage + 1
+    let next = null;
     if (currentPage != 1 ) prev = currentPage - 1
-
+    if (currentPage != lastPage) next = currentPage + 1
     //get elements with their corresponding sanction
     const sanctionedData = await this.prisma.sanctioned.findMany({
       include: {
@@ -35,7 +36,7 @@ export class SanctionedService {
       data: sanctionedData,
       meta: {
         total: count,
-        lastPage: (count/PER_PAGE),
+        lastPage: lastPage,
         currentPage: currentPage,
         perPage: PER_PAGE,
         prev: prev,

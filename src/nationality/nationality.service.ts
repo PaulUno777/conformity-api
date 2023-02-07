@@ -10,7 +10,12 @@ export class NationalityService {
     const nationalities = await this.prisma.nationalityList.findMany(
       {select: {country: true}}
     );
-    //const cleanNationalities = nationalities.filter()
-    return {data: nationalities};
+    const cleanNationalities = this.removeDuplicates(nationalities)
+    return {data: cleanNationalities};
+  }
+
+
+  removeDuplicates(array: any[]) {
+    return array.filter((item, index) => array.indexOf(item) === index)
   }
 }

@@ -15,6 +15,10 @@ export class SanctionedService {
     const currentPage: number = Math.max(Number(page) || 1, 1);
     const pageNumber : number= currentPage - 1;
 
+    let prev = null;
+    let next = currentPage + 1
+    if (currentPage != 1 ) prev = currentPage - 1
+
     //get elements with their corresponding sanction
     const sanctionedData = await this.prisma.sanctioned.findMany({
       include: {
@@ -28,10 +32,16 @@ export class SanctionedService {
     });
 
     return {
-      page: pageNumber + 1,
-      count: count,
       data: sanctionedData,
-    };
+      meta: {
+        total: count,
+        lastPage: (count/PER_PAGE),
+        currentPage: currentPage,
+        perPage: PER_PAGE,
+        prev: prev,
+        next: next,
+      }
+    }
   }
 
   async findOne(id: string) {

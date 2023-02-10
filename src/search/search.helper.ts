@@ -4,7 +4,7 @@ import { SanctionedDto } from './dto/sanctioned.output.dto';
 
 @Injectable()
 export class SearchHelper {
-    mapSanctioned(result: any): SanctionedDto {
+    mapSanctioned(result: any, max: number): SanctionedDto {
         const entity = {
             id: result._id.$oid,
             listId: result.list_id.$oid,
@@ -33,12 +33,12 @@ export class SearchHelper {
         if(result.dateOfBirth != null) entity["dateOfBirth"] = result.dateOfBirth.date
         if(result.nationality != null) entity["nationality"] = result.nationality.country
 
-        const score: number = (result.score);
+        const score: number = this.setPercentage(max, result.score);
 
         return { entity, score };
     }
 
-    mapAka(result: any): SanctionedDto {
+    mapAka(result: any, max): SanctionedDto {
         const entity = {
             id: result.data._id.$oid,
             listId: result.data.list_id.$oid,
@@ -65,8 +65,10 @@ export class SearchHelper {
         }
 
         
+        if(result.dateOfBirth != null) entity["dateOfBirth"] = result.dateOfBirth.date
+        if(result.nationality != null) entity["nationality"] = result.nationality.country
 
-        const score: number = (result.score);
+        const score: number = this.setPercentage(max, result.score);
 
         return { entity, score };
     }
@@ -86,5 +88,52 @@ export class SearchHelper {
         });
         return filtered;
     }
+
+    setPercentage(scoreMax: number, score: number): number{
+        const data = score*100/scoreMax;
+        return Number(data.toFixed(2))
+    }
+
+    //Apply nationality and date of birth filters to retrieved data 
+    filterCompleteSearch(response: any[], body: any){
+        let filteredData: any[] 
+
+        if(body.dob ){
+            filteredData = response.filter((value: any) => {
+                console.log(value);
+                if(value.entity.dateOfBirth){
+                    console.log(this.compareNationality(value.entity.nationality, body.nationality));
+                    return this.compareDate(value.entity.dateOfBirth, body.dob)
+                };
+            }) 
+        }
+
+        if(body.nationality){
+            filteredData = response.filter((value: any) => {
+                if(value.entity.nationality) {
+                    console.log(this.compareNationality(value.entity.nationality, body.nationality));
+                    return  this.compareNationality(value.entity.nationality, body.nationality)
+                }
+                
+            }) 
+        }
+         
+        return filteredData;
+    }
+
+    compareDate(responseDate:string, bodyDate:string): boolean{
+        const resDate = new Date(responseDate).toISOString().slice(0, 10); 
+        console.log(resDate.includes(bodyDate));
+        return resDate.includes(bodyDate)
+    }
+    compareNationality(responseNationality:string, bodyNationality:string): boolean{
+        const resNationality = responseNationality.toUpperCase(); 
+        const bodNationality = bodyNationality.toUpperCase(); 
+
+        console.log(resNationality.includes(bodNationality));
+        return resNationality.includes(bodNationality)
+    }
 }
+
+
 

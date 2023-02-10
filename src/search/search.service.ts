@@ -112,17 +112,17 @@ export class SearchService {
 
       //clean data and map before sending
       const sanctionedClean: any[] = await sanctionedResult.map((elt) => {
-        const cleanData = this.helper.mapSanctioned(elt);
+        const cleanData = this.helper.mapSanctioned(elt, sanctionedResult[0].score);
         return cleanData;
       })
 
       const akaClean: any[] = await akaResult.map((elt) => {
-        const cleanData = this.helper.mapAka(elt);
+        const cleanData = this.helper.mapAka(elt, akaResult[0].score);
         return cleanData;
       })
 
       const cleanData = await this.helper.cleanSearch(sanctionedClean, akaClean);
-  
+
       return {
         resultsCount: cleanData.length,
         results: cleanData
@@ -135,6 +135,7 @@ export class SearchService {
   async searchComplete(body: SearchCompleteDto) {
     let sanctionedPipeline = [];
     let akaPipeline = [];
+    let filtered: any[]
 
     let fullName = '';
     if (body.firstName) fullName += body.firstName;
@@ -151,10 +152,11 @@ export class SearchService {
             path: [
               "firstName",
               "lastName",
-              "middleName"
+              "middleName",
+              "otherNames"
             ],
             fuzzy: {
-              maxEdits: 1,
+              maxEdits: 2,
             },
           },
         }
@@ -238,16 +240,136 @@ export class SearchService {
         },
       );
       sanctionedPipeline.push({ $limit: 10 });
+      const result: any = await this.prisma.sanctioned.aggregateRaw({ pipeline: sanctionedPipeline })
+      
+      const cleanResult = await result.map((elt) => {
+        const cleanData = this.helper.mapSanctioned(elt, result[0].score);
+        return cleanData;
+      })
+
+      filtered =await this.helper.filterCompleteSearch(cleanResult, body)
+
+      return {
+        resultsCount: filtered.length,
+        results: filtered
+      };
     }
 
-    console.log(sanctionedPipeline);
-    const sanctionedResult:any = await this.prisma.sanctioned.aggregateRaw({ pipeline: sanctionedPipeline })
+    if (body.alias && body.alias != '') {
+      //push the first stage in the pipeline
+      akaPipeline.push({
+        $search: {
+          index: 'sanctioned_aka_index',
+          text: {
+            query: body.alias,
+            path: [
+              "firstName",
+              "lastName",
+              "middleName"
+            ],
+            fuzzy: {
+              maxEdits: 1,
+            },
+          },
+        }
+      },{
+        $lookup: {
+          from: 'Sanctioned',
+          let: {
+            id: '$sanctionnedId'
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$id']
+                }
+              }
+            }
+          ],
+          'as': 'sanctioned'
+        }
+      }
+      );
 
-    const sanctionedClean: any[] = await sanctionedResult.map((elt) => {
-      const cleanData = this.helper.mapSanctioned(elt);
-      return cleanData;
-    })
-    return sanctionedClean;
+      //push the DOB filter stage in the pipeline
+      if (body.dob) {
+        akaPipeline.push({
+          $lookup: {
+            from: "DateOfBirthList",
+            let: {id: "$sanctionnedId"},
+            pipeline: [{
+              $match: {
+                $expr: {
+                  $eq: ["$sanctionnedId", "$$id"],
+                },
+              },
+            },],
+            as: "dateOfBirth",
+          }
+        });
+      }
+
+      //push the DOB filter stage in the pipeline
+      if (body.nationality) {
+        akaPipeline.push({
+          $lookup: {
+            from: "NationalityList",
+            let: {
+              id: "$sanctionnedId",
+            },
+            pipeline: [{
+              $match: {
+                $expr: {
+                  $eq: ["$sanctionnedId", "$$id"],
+                },
+              },
+            },],
+            as: "nationality",
+          }
+        });
+      }
+      akaPipeline.push(
+        {
+          
+          $project: {
+            _id: 0,
+            data: {
+              $arrayElemAt: [
+                '$sanctioned', 0
+              ]
+            },
+            dateOfBirth: {
+              '$arrayElemAt': [
+                '$dateOfBirth', 0
+              ]
+            },
+            nationality: {
+              '$arrayElemAt': [
+                '$nationality', 0
+              ]
+            },
+            score: { $meta: "searchScore" }
+          }
+        },
+      );
+      akaPipeline.push({ $limit: 10 });
+      const result: any = await this.prisma.akaList.aggregateRaw({ pipeline: akaPipeline })
+      const cleanResult: any = await result.map((elt) => {
+        const cleanData = this.helper.mapAka(elt, result[0].score);
+        return cleanData;
+      });
+
+      filtered =await this.helper.filterCompleteSearch(cleanResult, body)
+
+      return {
+        resultsCount: filtered.length,
+        results: filtered
+      };
+
+    }
+
+    throw {message: "incomplete data received"}
   }
 
 }

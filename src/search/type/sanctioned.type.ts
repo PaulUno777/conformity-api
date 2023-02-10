@@ -21,4 +21,6 @@ export class SanctionedType {
     otherNames: Array<string>;
     createdAt: Date;
     updatedAt: Date;
+    dateOfBirth?: string;
+    nationality?: string;
 }

@@ -1,21 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+/* eslint-disable prettier/prettier */
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SearchCompleteDto {
-    @ApiProperty()
-    firstName: string;
+  @ApiProperty()
+  fullName: string;
 
-    @ApiPropertyOptional()
-    middleName?: string;
+  @ApiPropertyOptional()
+  dob?: string;
 
-    @ApiProperty()
-    lastName: string;
-
-    @ApiPropertyOptional()
-    alias?: string;
-
-    @ApiPropertyOptional()
-    dob?: string;
-
-    @ApiPropertyOptional()
-    nationality?: string;
+  @ApiPropertyOptional()
+  nationality?: string[];
 }

@@ -102,11 +102,13 @@ export class SearchHelper {
     return filteredData;
   }
 
+  
   compareDate(responseDate: string, bodyDate: string): boolean {
     const resDate = new Date(responseDate).toISOString().slice(0, 10);
     console.log(resDate.includes(bodyDate));
     return resDate.includes(bodyDate);
   }
+
   compareNationality(
     responseNationality: string,
     bodyNationality: string,

@@ -69,6 +69,13 @@ export class SearchHelper {
     return filtered;
   }
 
+  // merge akalist and sanctioned
+  async cleanSearchComplete(array1: any[], array2: any[]) {
+    const cleanData: any[] = array1.concat(array2);
+    cleanData.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    return cleanData;
+  }
+
   //transform score into percentage
   setPercentage(scoreMax: number, score: number): number {
     const data = (score * 100) / scoreMax;
@@ -97,7 +104,6 @@ export class SearchHelper {
           }
         }
       });
-      console.log(filteredData);
     }
 
     return filteredData;

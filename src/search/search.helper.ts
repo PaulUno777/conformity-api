@@ -53,24 +53,32 @@ export class SearchHelper {
   }
 
   // merge akalist and sanctioned  and remove duplicate data
-  async cleanSearch(array1: any[], array2: any[]) {
+  async cleanSearch(array1: any[], array2: any[]): Promise<any[]> {
     const cleanData: any[] = array1.concat(array2);
 
     cleanData.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    const filtered = this.removeDuplicate(cleanData);
+    return filtered;
+  }
+
+  // remove duplicate data
+  removeDuplicate(data: any[]): any[] {
     const indexes = [];
     const filtered = [];
 
-    cleanData.forEach(function (item) {
-      if (!indexes.includes(item.entity.id)) {
-        indexes.push(item.entity.id);
-        filtered.push(item);
-      }
-    });
+    if(data.length > 1){
+      data.forEach(function (item) {
+        if (!indexes.includes(item.entity.id)) {
+          indexes.push(item.entity.id);
+          filtered.push(item);
+        }
+      });
+    }
     return filtered;
   }
 
   // merge akalist and sanctioned
-  async cleanSearchComplete(array1: any[], array2: any[]) {
+  async mergeSearch(array1: any[], array2: any[]) {
     const cleanData: any[] = array1.concat(array2);
     cleanData.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
     return cleanData;
@@ -106,7 +114,9 @@ export class SearchHelper {
       });
     }
 
-    return filteredData;
+    const cleanData = this.removeDuplicate(filteredData);
+
+    return cleanData;
   }
 
   getBodyNationalityNames(nationalities: string[]) {
@@ -127,22 +137,21 @@ export class SearchHelper {
     console.log(responseDate);
     if (responseDate.includes('/')) {
       const date = responseDate.split('/');
-      if(Number(date[0])>31){
+      if (Number(date[0]) > 31) {
         const resDate = new Date(date[0] + '-' + date[1] + '-' + date[2])
-        .toISOString()
-        .slice(0, 10);
+          .toISOString()
+          .slice(0, 10);
         return resDate.includes(bodyDate);
       }
-      if(date.length > 2){
+      if (date.length > 2) {
         const resDate = new Date(date[2] + '-' + date[1] + '-' + date[0])
-        .toISOString()
-        .slice(0, 10);
+          .toISOString()
+          .slice(0, 10);
         return resDate.includes(bodyDate);
-      }
-      else{
+      } else {
         const resDate = new Date(date[1] + '-' + date[0])
-        .toISOString()
-        .slice(0, 10);
+          .toISOString()
+          .slice(0, 10);
         return resDate.includes(bodyDate);
       }
     } else {

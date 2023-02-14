@@ -408,7 +408,7 @@ export class SearchService {
       });
 
       //merge sanctioned and aka result into one array and remove duplicate
-      const cleanData = await this.helper.cleanSearchComplete(
+      const cleanData = await this.helper.mergeSearch(
         sanctionedClean,
         akaClean,
       );

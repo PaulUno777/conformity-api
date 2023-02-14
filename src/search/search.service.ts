@@ -9,6 +9,7 @@ export class SearchService {
 
   async search(text: string) {
     if (text) {
+      //Search in sanctioned list
       const sanctionedResult: any = await this.prisma.sanctioned.aggregateRaw({
         pipeline: [
           {
@@ -30,28 +31,24 @@ export class SearchService {
             },
           },
           {
+            $lookup: {
+              from: 'SanctionList',
+              localField: 'list_id',
+              foreignField: '_id',
+              pipeline: [{ $project: { _id: 0, name: 1 } }],
+              as: 'sanction',
+            },
+          },
+          {
             $project: {
-              list_id: 1,
               firstName: 1,
               middleName: 1,
               lastName: 1,
-              title: 1,
-              type: 1,
-              remark: 1,
-              gender: 1,
-              designation: 1,
-              motive: 1,
-              reference: 1,
-              reference_ue: 1,
-              reference_onu: 1,
-              un_list_type: 1,
-              listed_on: 1,
-              list_type: 1,
-              submitted_by: 1,
               original_name: 1,
               otherNames: 1,
-              updatedAt: 1,
-              createdAt: 1,
+              sanction: {
+                $arrayElemAt: ['$sanction', 0],
+              },
               score: { $meta: 'searchScore' },
             },
           },
@@ -59,13 +56,14 @@ export class SearchService {
         ],
       });
 
+      //Search in aka list
       const akaResult: any = await this.prisma.akaList.aggregateRaw({
         pipeline: [
           {
             $search: {
               index: 'sanctioned_aka_index',
               text: {
-                query: 'hussam',
+                query: text,
                 path: ['firstName', 'lastName', 'middleName'],
                 fuzzy: {
                   maxEdits: 2,
@@ -87,15 +85,44 @@ export class SearchService {
                     },
                   },
                 },
+                {
+                  $project: {
+                    list_id: 1,
+                    firstName: 1,
+                    middleName: 1,
+                    lastName: 1,
+                    original_name: 1,
+                    otherNames: 1,
+                  },
+                },
               ],
               as: 'sanctioned',
             },
           },
           {
+            $lookup: {
+              from: 'SanctionList',
+              localField: 'sanctioned.0.list_id',
+              foreignField: '_id',
+              as: 'sanction',
+              pipeline: [
+                {
+                  $project: {
+                    _id: 0,
+                    name: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
             $project: {
               _id: 0,
-              data: {
+              entity: {
                 $arrayElemAt: ['$sanctioned', 0],
+              },
+              sanction: {
+                $arrayElemAt: ['$sanction', 0],
               },
               score: {
                 $meta: 'searchScore',
@@ -120,22 +147,11 @@ export class SearchService {
         return cleanData;
       });
 
+      //merge sanctioned and aka result into one array and remove duplicate
       const cleanData = await this.helper.cleanSearch(
         sanctionedClean,
         akaClean,
       );
-
-      // const cleanSanctioned = sanctioned.map(elt => {
-      //   return {
-      //     id: elt.id,
-      //     firstName: elt.firstName,
-      //     middleName: elt.middleName,
-      //     lastName: elt.lastName,
-      //     originalName: elt.originalName,
-      //     otherNames: elt.otherNames,
-      //     Sanction: elt.Sanction.name,
-      //   };
-      // })
 
       return {
         resultsCount: cleanData.length,
@@ -145,6 +161,8 @@ export class SearchService {
 
     throw { message: 'you must provide a query text parameter' };
   }
+
+  //Search  Complete Features
 
   async searchComplete(body: SearchCompleteDto) {
     const sanctionedPipeline = [];

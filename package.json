@@ -27,6 +27,8 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/swagger": "^6.1.4",
     "@prisma/client": "^4.10.1",
+    "exceljs": "^4.3.0",
+    "i18n-iso-countries": "^7.5.0",
     "mongodb": "^4.13.0",
     "mongoose": "^6.9.0",
     "mysql2": "^3.0.1",

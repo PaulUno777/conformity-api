@@ -1,33 +1,20 @@
 /* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { SanctionedDto } from './dto/sanctioned.output.dto';
+import * as i18nIsoCountries from 'i18n-iso-countries'
 
 @Injectable()
 export class SearchHelper {
-  mapSanctioned(result: any, max: number): SanctionedDto {
+  // map sanctioned data into sanctionedDto
+  mapSanctioned(result: any, max: number) : SanctionedDto {
     const entity = {
       id: result._id.$oid,
-      listId: result.list_id.$oid,
       firstName: result.firstName,
       middleName: result.middleName,
       lastName: result.lastName,
-      title: result.title,
-      type: result.type,
-      remark: result.remark,
-      gender: result.gender,
-      designation: result.designation,
-      motive: result.motive,
-      reference: result.reference,
-      referenceUe: result.reference_ue,
-      referenceOnu: result.reference_onu,
-      unListType: result.un_list_type,
-      listedOn: result.listed_on,
-      listType: result.list_type,
-      submittedBy: result.submitted_by,
       originalName: result.original_name,
       otherNames: result.otherNames,
-      createdAt: result.createdAt.$date,
-      updatedAt: result.updatedAt.$date,
+      sanction: result.sanction.name
     };
 
     if (result.dateOfBirth != null)
@@ -40,30 +27,16 @@ export class SearchHelper {
     return { entity, score };
   }
 
-  mapAka(result: any, max): SanctionedDto {
+  // map aka data into sanctionedDto
+  mapAka(result: any, max) : SanctionedDto {
     const entity = {
-      id: result.data._id.$oid,
-      listId: result.data.list_id.$oid,
-      firstName: result.data.firstName,
-      middleName: result.data.middleName,
-      lastName: result.data.lastName,
-      title: result.data.title,
-      type: result.data.type,
-      remark: result.data.remark,
-      gender: result.data.gender,
-      designation: result.data.designation,
-      motive: result.data.motive,
-      reference: result.data.reference,
-      referenceUe: result.data.reference_ue,
-      referenceOnu: result.data.reference_onu,
-      unListType: result.data.un_list_type,
-      listedOn: result.data.listed_on,
-      listType: result.data.list_type,
-      submittedBy: result.data.submitted_by,
-      originalName: result.data.original_name,
-      otherNames: result.data.otherNames,
-      createdAt: result.data.createdAt.$date,
-      updatedAt: result.data.updatedAt.$date,
+      id: result.entity._id.$oid,
+      firstName: result.entity.firstName,
+      middleName: result.entity.middleName,
+      lastName: result.entity.lastName,
+      originalName: result.entity.original_name,
+      otherNames: result.entity.otherNames,
+      sanction: result.sanction.name,
     };
 
     if (result.dateOfBirth != null) {
@@ -78,6 +51,7 @@ export class SearchHelper {
     return { entity, score };
   }
 
+  // merge akalist and sanctioned  and remove duplicate data
   async cleanSearch(array1: any[], array2: any[]) {
     const cleanData: any[] = array1.concat(array2);
 
@@ -94,6 +68,7 @@ export class SearchHelper {
     return filtered;
   }
 
+  //transform score into percentage
   setPercentage(scoreMax: number, score: number): number {
     const data = (score * 100) / scoreMax;
     return Number(data.toFixed(2));

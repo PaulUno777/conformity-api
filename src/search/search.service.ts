@@ -248,92 +248,87 @@ export class SearchService {
           },
         },
       );
+      //get the DOB joined data in the pipeline
+      //----sanctioned
+      sanctionedPipeline.push({
+        $lookup: {
+          from: 'DateOfBirthList',
+          let: {
+            id: '$_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$sanctionnedId', '$$id'],
+                },
+              },
+            },
+            { $project: { _id: 0, date: 1 } },
+          ],
+          as: 'dateOfBirth',
+        },
+      });
+      //----aka
+      akaPipeline.push({
+        $lookup: {
+          from: 'DateOfBirthList',
+          let: { id: '$sanctionnedId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$sanctionnedId', '$$id'],
+                },
+              },
+            },
+            { $project: { _id: 0, date: 1 } },
+          ],
+          as: 'dateOfBirth',
+        },
+      });
 
-      if (body.dob) {
-        //get the DOB joined data in the pipeline
-        //----sanctioned
-        sanctionedPipeline.push({
-          $lookup: {
-            from: 'DateOfBirthList',
-            let: {
-              id: '$_id',
+      //Get the nationality joined data in the pipeline
+      //----sanctioned
+      sanctionedPipeline.push({
+        $lookup: {
+          from: 'NationalityList',
+          let: {
+            id: '$_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$sanctionnedId', '$$id'],
+                },
+              },
             },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$sanctionnedId', '$$id'],
-                  },
+            { $project: { _id: 0, country: 1 } },
+          ],
+          as: 'nationality',
+        },
+      });
+      //----aka
+      akaPipeline.push({
+        $lookup: {
+          from: 'NationalityList',
+          let: {
+            id: '$sanctionnedId',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$sanctionnedId', '$$id'],
                 },
               },
-              { $project: { _id: 0, date: 1 } },
-            ],
-            as: 'dateOfBirth',
-          },
-        });
-        //----aka
-        akaPipeline.push({
-          $lookup: {
-            from: 'DateOfBirthList',
-            let: { id: '$sanctionnedId' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$sanctionnedId', '$$id'],
-                  },
-                },
-              },
-              { $project: { _id: 0, date: 1 } },
-            ],
-            as: 'dateOfBirth',
-          },
-        });
-      }
-
-      if (body.nationality) {
-        //Get the nationality joined data in the pipeline
-        //----sanctioned
-        sanctionedPipeline.push({
-          $lookup: {
-            from: 'NationalityList',
-            let: {
-              id: '$_id',
             },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$sanctionnedId', '$$id'],
-                  },
-                },
-              },
-              { $project: { _id: 0, country: 1 } },
-            ],
-            as: 'nationality',
-          },
-        });
-        //----aka
-        akaPipeline.push({
-          $lookup: {
-            from: 'NationalityList',
-            let: {
-              id: '$sanctionnedId',
-            },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$sanctionnedId', '$$id'],
-                  },
-                },
-              },
-              { $project: { _id: 0, country: 1 } },
-            ],
-            as: 'nationality',
-          },
-        });
-      }
+            { $project: { _id: 0, country: 1 } },
+          ],
+          as: 'nationality',
+        },
+      });
 
       //push project stage to retrieve needed data
       //----sanctioned
@@ -383,7 +378,7 @@ export class SearchService {
       );
 
       //Request query to mongoDB
-      // //----sanctioned
+      //----sanctioned
       const sanctionedResult: any = await this.prisma.sanctioned.aggregateRaw({
         pipeline: sanctionedPipeline,
       });

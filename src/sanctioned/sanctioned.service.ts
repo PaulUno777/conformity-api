@@ -4,36 +4,50 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SanctionedService {
-  constructor(private prisma: PrismaService, private config: ConfigService) {}
+  constructor(private prisma: PrismaService, private config: ConfigService) { }
 
   async findAll(page?: number): Promise<any> {
     //Elements per page
-    const PER_PAGE : number = Number(this.config.get('PER_PAGE'));
+    const PER_PAGE: number = Number(this.config.get('PER_PAGE'));
 
     const count: number = await this.prisma.sanctioned.count() | 0;
 
     const currentPage: number = Math.max(Number(page) || 1, 1);
-    const pageNumber : number= currentPage - 1;
+    const pageNumber: number = currentPage - 1;
 
-    let lastPage = Math.ceil((count/PER_PAGE));
+    let lastPage = Math.ceil((count / PER_PAGE));
     let prev = null;
     let next = null;
-    if (currentPage != 1 ) prev = currentPage - 1
+    if (currentPage != 1) prev = currentPage - 1
     if (currentPage != lastPage) next = currentPage + 1
     //get elements with their corresponding sanction
-    const sanctionedData = await this.prisma.sanctioned.findMany({
-      include: {
-        Sanction: true,
-      },
+    const sanctioned = await this.prisma.sanctioned.findMany({
       orderBy: {
         updatedAt: 'desc',
+      },
+      include: {
+        Sanction: true
       },
       skip: pageNumber * PER_PAGE,
       take: PER_PAGE,
     });
 
+
+    const cleanSanctioned = sanctioned.map(elt => {
+      return {
+        id: elt.id,
+        firstName: elt.firstName,
+        middleName: elt.middleName,
+        lastName: elt.lastName,
+        originalName: elt.originalName,
+        otherNames: elt.otherNames,
+        Sanction: elt.Sanction.name,
+      };
+    })
+
+
     return {
-      data: sanctionedData,
+      data: cleanSanctioned,
       meta: {
         total: count,
         lastPage: lastPage,

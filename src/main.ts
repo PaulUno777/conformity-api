@@ -5,17 +5,16 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api');
   const configService = app.get(ConfigService);
-
 
   //Open API Documentation
   const config = new DocumentBuilder()
     .setTitle('KAMIX Conformity Application')
     .setDescription('KAMIX Conformity Rest API Docs')
     .setVersion('1.0')
-    .build(); 
-    
+    .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
@@ -32,7 +31,7 @@ async function bootstrap() {
   app.enableCors(options);
 
   const port = configService.get('PORT') ?? 3000;
-  
+
   await app.listen(port);
   console.log(`Application Is Running on port ${port}`);
 }

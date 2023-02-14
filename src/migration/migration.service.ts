@@ -4,10 +4,7 @@ import { MigrationHelper } from './migration.helper';
 
 @Injectable()
 export class MigrationService {
-  constructor(
-    private prisma: PrismaService,
-    private helper: MigrationHelper
-  ) { }
+  constructor(private prisma: PrismaService, private helper: MigrationHelper) {}
 
   //=========Main method for all Migrations================
   async migrateAllToMongo() {
@@ -19,7 +16,15 @@ export class MigrationService {
     const resCit = await this.migrateCitizenshipListToMongo();
     const resAka = await this.migrateAkaListToMongo();
 
-    return [resSantion, resSantioned, resPlace, resDate, resNat, resCit, resAka];
+    return [
+      resSantion,
+      resSantioned,
+      resPlace,
+      resDate,
+      resNat,
+      resCit,
+      resAka,
+    ];
   }
 
   //=========Main method for all Updates================
@@ -32,9 +37,16 @@ export class MigrationService {
     const resCit = await this.updateCitizenshipListToMongo();
     const resAka = await this.updateAkaListToMongo();
 
-    return [resSantion, resSantioned, resPlace, resDate, resNat, resCit, resAka]
+    return [
+      resSantion,
+      resSantioned,
+      resPlace,
+      resDate,
+      resNat,
+      resCit,
+      resAka,
+    ];
   }
-
 
   //==== Method for AkaList =============================
   //------ Make migration --------
@@ -79,12 +91,15 @@ export class MigrationService {
       }
       return { message: `${count} AkaList element(s) migrated` };
     }
-    return { message: 'no AkaList\'s element migrated' };
+    return { message: "no AkaList's element migrated" };
   }
   //----- Update database -------
   async updateAkaListToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.akaList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.akaList.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
     //Get data from MYSQL
     const connection = await this.helper.mysqlConnect();
@@ -109,7 +124,7 @@ export class MigrationService {
         };
       });
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.akaList.upsert({
@@ -121,9 +136,8 @@ export class MigrationService {
       }
       return { message: `${count} akaList element(s) updated` };
     }
-    return { message: 'no akaList\'s element updated' };
+    return { message: "no akaList's element updated" };
   }
-
 
   //===== Method for CitizenshipList migration ===========
   //------ Make migration --------
@@ -166,12 +180,15 @@ export class MigrationService {
       }
       return { message: `${count} citizenshipList element(s) migrated` };
     }
-    return { message: 'no citizenshipList\'s element migrated' };
+    return { message: "no citizenshipList's element migrated" };
   }
   //----- Update database -------
   async updateCitizenshipListToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.citizenshipList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.citizenshipList.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
 
     //Get data from MYSQL
@@ -194,7 +211,7 @@ export class MigrationService {
         };
       });
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.citizenshipList.upsert({
@@ -206,9 +223,8 @@ export class MigrationService {
       }
       return { message: `${count} citizenshipList element(s) updated` };
     }
-    return { message: 'no citizenshipList\'s element updated' };
+    return { message: "no citizenshipList's element updated" };
   }
-
 
   //==== Method for NationalityList migration ==============
   //------ Make migration --------
@@ -252,12 +268,15 @@ export class MigrationService {
       }
       return { message: `${count} nationalityList element(s) migrated` };
     }
-    return { message: 'no nationalityList\'s element migrated' };
+    return { message: "no nationalityList's element migrated" };
   }
   //----- Update database -------
   async updateNationalityListToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.nationalityList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.nationalityList.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
 
     //Get data from MYSQL
@@ -280,7 +299,7 @@ export class MigrationService {
         };
       });
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.nationalityList.upsert({
@@ -292,9 +311,8 @@ export class MigrationService {
       }
       return { message: `${count} nationalityList element(s) updated` };
     }
-    return { message: 'no nationalityList\'s element updated' };
+    return { message: "no nationalityList's element updated" };
   }
-
 
   //====== Method for DateOfBirthList migration ==============
   //------ Make migration --------
@@ -338,12 +356,15 @@ export class MigrationService {
       }
       return { message: `${count} dateOfBirthList element(s) migrated` };
     }
-    return { message: 'no dateOfBirthList\'s element migrated' };
+    return { message: "no dateOfBirthList's element migrated" };
   }
   //----- Update database -------
   async updateDateOfBirthListToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.dateOfBirthList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.dateOfBirthList.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
 
     //Get data from MYSQL
@@ -366,7 +387,7 @@ export class MigrationService {
         };
       });
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.dateOfBirthList.upsert({
@@ -378,9 +399,8 @@ export class MigrationService {
       }
       return { message: `${count} dateOfBirthList element(s) updated` };
     }
-    return { message: 'no dateOfBirthList\'s element updated' };
+    return { message: "no dateOfBirthList's element updated" };
   }
-
 
   //===== Method for PlaceOfBirthList migration ================
   //------ Make migration --------
@@ -408,7 +428,6 @@ export class MigrationService {
       };
     });
 
-
     // // test we have alreading migrate data
     const testData = await this.prisma.placeOfBirthList.findUnique({
       where: { id: cleanData[0].id },
@@ -421,12 +440,15 @@ export class MigrationService {
       return { message: `${result} placeOfBirthList element(s) migrated` };
     }
 
-    return { message: 'no placeOfBirthList\'s element migrated' };
+    return { message: "no placeOfBirthList's element migrated" };
   }
   //----- Update database -------
   async updatePlaceOfBirthListToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.placeOfBirthList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.placeOfBirthList.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
 
     //Get data from MYSQL
@@ -454,7 +476,7 @@ export class MigrationService {
       });
 
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.placeOfBirthList.upsert({
@@ -466,9 +488,8 @@ export class MigrationService {
       }
       return { message: `${count} placeOfBirthList element(s) updated` };
     }
-    return { message: 'no placeOfBirthList\'s element updated' };
+    return { message: "no placeOfBirthList's element updated" };
   }
-
 
   //===== Method for sanctioned migration ========================
   //------ Make migration --------
@@ -481,7 +502,7 @@ export class MigrationService {
 
     //cleanup data
     const cleanData = table.map((elt) => {
-      let otherNames = [];
+      const otherNames = [];
       if (elt.name1 != null) otherNames.push(elt.name1);
       if (elt.name3 != null) otherNames.push(elt.name3);
       if (elt.name2 != null) otherNames.push(elt.name2);
@@ -514,7 +535,6 @@ export class MigrationService {
       };
     });
 
-
     // test we have alreading migrate data
     const testData = await this.prisma.sanctioned.findUnique({
       where: { id: cleanData[0].id },
@@ -536,12 +556,15 @@ export class MigrationService {
       return { message: `${count} sanctioned element(s) migrated` };
     }
 
-    return { message: 'no sanctioned\'s element migrated' };
+    return { message: "no sanctioned's element migrated" };
   }
   //----- Update database -------
   async updateSantionedToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.sanctioned.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.sanctioned.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
     //Get data from MYSQL
     const connection = await this.helper.mysqlConnect();
@@ -552,7 +575,7 @@ export class MigrationService {
     if (table.length > 0) {
       //cleanup data
       const cleanData = table.map((elt) => {
-        let otherNames = [];
+        const otherNames = [];
         if (elt.name1 != null) otherNames.push(elt.name1);
         if (elt.name3 != null) otherNames.push(elt.name3);
         if (elt.name2 != null) otherNames.push(elt.name2);
@@ -585,7 +608,7 @@ export class MigrationService {
         };
       });
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.sanctioned.upsert({
@@ -597,9 +620,8 @@ export class MigrationService {
       }
       return { message: `${count} sanctioned element(s) updated` };
     }
-    return { message: 'no sanctioned\'s element updated' };
+    return { message: "no sanctioned's element updated" };
   }
-
 
   //==== Method for sanctionList migration =========================
   //------ Make migration --------
@@ -629,16 +651,21 @@ export class MigrationService {
     });
 
     if (!testData) {
-      const result = await this.prisma.sanctionList.createMany({ data: cleanData });
+      const result = await this.prisma.sanctionList.createMany({
+        data: cleanData,
+      });
 
       return { message: `${result} sanctionList element(s) migrated` };
     }
-    return { message: 'no sanctionList\'s element migrated' };
+    return { message: "no sanctionList's element migrated" };
   }
   //----- Update database -------
   async updateSantionToMongo() {
     //Get the last updated element from mongoDB
-    const result = await this.prisma.sanctionList.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } });
+    const result = await this.prisma.sanctionList.findFirst({
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    });
     const lastDate = this.helper.transformDate(result.updatedAt);
 
     //Get data from MYSQL
@@ -662,7 +689,7 @@ export class MigrationService {
       });
 
       //update data in mongo database
-      let count = 0
+      let count = 0;
       for (let i = 0; i < cleanData.length; i++) {
         const { id, ...element } = cleanData[i];
         await this.prisma.sanctionList.upsert({
@@ -674,6 +701,6 @@ export class MigrationService {
       }
       return { message: `${count} sanctionList element(s) updated` };
     }
-    return { message: 'no sanctionList\'s element updated' };
+    return { message: "no sanctionList's element updated" };
   }
 }

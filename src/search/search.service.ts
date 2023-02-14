@@ -5,7 +5,7 @@ import { SearchCompleteDto } from './dto/search.complete.dto';
 
 @Injectable()
 export class SearchService {
-  constructor(private prisma: PrismaService, private helper: SearchHelper) { }
+  constructor(private prisma: PrismaService, private helper: SearchHelper) {}
 
   async search(text: string) {
     if (text) {
@@ -17,43 +17,43 @@ export class SearchService {
               text: {
                 query: text,
                 path: [
-                  "firstName",
-                  "lastName",
-                  "middleName",
-                  "otherNames",
-                  "original_name",
+                  'firstName',
+                  'lastName',
+                  'middleName',
+                  'otherNames',
+                  'original_name',
                 ],
                 fuzzy: {
                   maxEdits: 2,
                 },
               },
-            }
+            },
           },
           {
             $project: {
-              "list_id": 1,
-              "firstName": 1,
-              "middleName": 1,
-              "lastName": 1,
-              "title": 1,
-              "type": 1,
-              "remark": 1,
-              "gender": 1,
-              "designation": 1,
-              "motive": 1,
-              "reference": 1,
-              "reference_ue": 1,
-              "reference_onu": 1,
-              "un_list_type": 1,
-              "listed_on": 1,
-              "list_type": 1,
-              "submitted_by": 1,
-              "original_name": 1,
-              "otherNames": 1,
-              "updatedAt": 1,
-              "createdAt": 1,
-              score: { $meta: "searchScore" }
-            }
+              list_id: 1,
+              firstName: 1,
+              middleName: 1,
+              lastName: 1,
+              title: 1,
+              type: 1,
+              remark: 1,
+              gender: 1,
+              designation: 1,
+              motive: 1,
+              reference: 1,
+              reference_ue: 1,
+              reference_onu: 1,
+              un_list_type: 1,
+              listed_on: 1,
+              list_type: 1,
+              submitted_by: 1,
+              original_name: 1,
+              otherNames: 1,
+              updatedAt: 1,
+              createdAt: 1,
+              score: { $meta: 'searchScore' },
+            },
           },
           { $limit: 15 },
         ],
@@ -62,70 +62,84 @@ export class SearchService {
       const akaResult: any = await this.prisma.akaList.aggregateRaw({
         pipeline: [
           {
-            '$search': {
-              'index': 'sanctioned_aka_index',
-              'text': {
-                'query': 'hussam',
-                'path': [
-                  'firstName', 'lastName', 'middleName'
-                ],
-                'fuzzy': {
-                  'maxEdits': 2
-                }
-              }
-            }
-          }, {
-            '$lookup': {
-              'from': 'Sanctioned',
-              'let': {
-                'id': '$sanctionnedId'
+            $search: {
+              index: 'sanctioned_aka_index',
+              text: {
+                query: 'hussam',
+                path: ['firstName', 'lastName', 'middleName'],
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
-              'pipeline': [
-                {
-                  '$match': {
-                    '$expr': {
-                      '$eq': [
-                        '$_id', '$$id'
-                      ]
-                    }
-                  }
-                }
-              ],
-              'as': 'sanctioned'
-            }
-          }, {
-            '$project': {
-              '_id': 0,
-              'data': {
-                '$arrayElemAt': [
-                  '$sanctioned', 0
-                ]
-              },
-              'score': {
-                '$meta': 'searchScore'
-              }
-            }
+            },
           },
-          { $limit: 15 }
-        ]
+          {
+            $lookup: {
+              from: 'Sanctioned',
+              let: {
+                id: '$sanctionnedId',
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$_id', '$$id'],
+                    },
+                  },
+                },
+              ],
+              as: 'sanctioned',
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              data: {
+                $arrayElemAt: ['$sanctioned', 0],
+              },
+              score: {
+                $meta: 'searchScore',
+              },
+            },
+          },
+          { $limit: 15 },
+        ],
       });
 
       //clean data and map before sending
       const sanctionedClean: any[] = await sanctionedResult.map((elt) => {
-        const cleanData = this.helper.mapSanctioned(elt, sanctionedResult[0].score);
+        const cleanData = this.helper.mapSanctioned(
+          elt,
+          sanctionedResult[0].score,
+        );
         return cleanData;
-      })
+      });
 
       const akaClean: any[] = await akaResult.map((elt) => {
         const cleanData = this.helper.mapAka(elt, akaResult[0].score);
         return cleanData;
-      })
+      });
 
-      const cleanData = await this.helper.cleanSearch(sanctionedClean, akaClean);
+      const cleanData = await this.helper.cleanSearch(
+        sanctionedClean,
+        akaClean,
+      );
+
+      // const cleanSanctioned = sanctioned.map(elt => {
+      //   return {
+      //     id: elt.id,
+      //     firstName: elt.firstName,
+      //     middleName: elt.middleName,
+      //     lastName: elt.lastName,
+      //     originalName: elt.originalName,
+      //     otherNames: elt.otherNames,
+      //     Sanction: elt.Sanction.name,
+      //   };
+      // })
 
       return {
         resultsCount: cleanData.length,
-        results: cleanData
+        results: cleanData,
       };
     }
 
@@ -133,14 +147,14 @@ export class SearchService {
   }
 
   async searchComplete(body: SearchCompleteDto) {
-    let sanctionedPipeline = [];
-    let akaPipeline = [];
-    let filtered: any[]
+    const sanctionedPipeline = [];
+    const akaPipeline = [];
+    let filtered: any[];
 
     let fullName = '';
     if (body.firstName) fullName += body.firstName;
-    if (body.middleName) fullName += (' ' + body.middleName);
-    if (body.lastName) fullName += (' ' + body.lastName);
+    if (body.middleName) fullName += ' ' + body.middleName;
+    if (body.lastName) fullName += ' ' + body.lastName;
 
     if (fullName != '') {
       //push the first stage in the pipeline
@@ -149,36 +163,33 @@ export class SearchService {
           index: 'sanctionned_index',
           text: {
             query: fullName,
-            path: [
-              "firstName",
-              "lastName",
-              "middleName",
-              "otherNames"
-            ],
+            path: ['firstName', 'lastName', 'middleName', 'otherNames'],
             fuzzy: {
               maxEdits: 2,
             },
           },
-        }
+        },
       });
 
       //push the DOB filter stage in the pipeline
       if (body.dob) {
         sanctionedPipeline.push({
           $lookup: {
-            from: "DateOfBirthList",
+            from: 'DateOfBirthList',
             let: {
-              id: "$_id",
+              id: '$_id',
             },
-            pipeline: [{
-              $match: {
-                $expr: {
-                  $eq: ["$sanctionnedId", "$$id"],
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$sanctionnedId', '$$id'],
+                  },
                 },
               },
-            },],
-            as: "dateOfBirth",
-          }
+            ],
+            as: 'dateOfBirth',
+          },
         });
       }
 
@@ -186,127 +197,125 @@ export class SearchService {
       if (body.nationality) {
         sanctionedPipeline.push({
           $lookup: {
-            from: "NationalityList",
+            from: 'NationalityList',
             let: {
-              id: "$_id",
+              id: '$_id',
             },
-            pipeline: [{
-              $match: {
-                $expr: {
-                  $eq: ["$sanctionnedId", "$$id"],
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$sanctionnedId', '$$id'],
+                  },
                 },
               },
-            },],
-            as: "nationality",
-          }
+            ],
+            as: 'nationality',
+          },
         });
       }
-      sanctionedPipeline.push(
-        {
-          $project: {
-            "list_id": 1,
-            "firstName": 1,
-            "middleName": 1,
-            "lastName": 1,
-            "title": 1,
-            "type": 1,
-            "remark": 1,
-            "gender": 1,
-            "designation": 1,
-            "motive": 1,
-            "reference": 1,
-            "reference_ue": 1,
-            "reference_onu": 1,
-            "un_list_type": 1,
-            "listed_on": 1,
-            "list_type": 1,
-            "submitted_by": 1,
-            "original_name": 1,
-            "otherNames": 1,
-            "updatedAt": 1,
-            "createdAt": 1,
-            "dateOfBirth": {
-              '$arrayElemAt': [
-                '$dateOfBirth', 0
-              ]
-            },
-            "nationality": {
-              '$arrayElemAt': [
-                '$nationality', 0
-              ]
-            },
-            score: { $meta: "searchScore" }
-          }
+      sanctionedPipeline.push({
+        $project: {
+          list_id: 1,
+          firstName: 1,
+          middleName: 1,
+          lastName: 1,
+          title: 1,
+          type: 1,
+          remark: 1,
+          gender: 1,
+          designation: 1,
+          motive: 1,
+          reference: 1,
+          reference_ue: 1,
+          reference_onu: 1,
+          un_list_type: 1,
+          listed_on: 1,
+          list_type: 1,
+          submitted_by: 1,
+          original_name: 1,
+          otherNames: 1,
+          updatedAt: 1,
+          createdAt: 1,
+          dateOfBirth: {
+            $arrayElemAt: ['$dateOfBirth', 0],
+          },
+          nationality: {
+            $arrayElemAt: ['$nationality', 0],
+          },
+          score: { $meta: 'searchScore' },
         },
-      );
+      });
       sanctionedPipeline.push({ $limit: 10 });
-      const result: any = await this.prisma.sanctioned.aggregateRaw({ pipeline: sanctionedPipeline })
-      
+      const result: any = await this.prisma.sanctioned.aggregateRaw({
+        pipeline: sanctionedPipeline,
+      });
+
       const cleanResult = await result.map((elt) => {
         const cleanData = this.helper.mapSanctioned(elt, result[0].score);
         return cleanData;
-      })
+      });
 
-      filtered =await this.helper.filterCompleteSearch(cleanResult, body)
+      filtered = await this.helper.filterCompleteSearch(cleanResult, body);
 
       return {
         resultsCount: filtered.length,
-        results: filtered
+        results: filtered,
       };
     }
 
     if (body.alias && body.alias != '') {
       //push the first stage in the pipeline
-      akaPipeline.push({
-        $search: {
-          index: 'sanctioned_aka_index',
-          text: {
-            query: body.alias,
-            path: [
-              "firstName",
-              "lastName",
-              "middleName"
-            ],
-            fuzzy: {
-              maxEdits: 1,
+      akaPipeline.push(
+        {
+          $search: {
+            index: 'sanctioned_aka_index',
+            text: {
+              query: body.alias,
+              path: ['firstName', 'lastName', 'middleName'],
+              fuzzy: {
+                maxEdits: 1,
+              },
             },
           },
-        }
-      },{
-        $lookup: {
-          from: 'Sanctioned',
-          let: {
-            id: '$sanctionnedId'
+        },
+        {
+          $lookup: {
+            from: 'Sanctioned',
+            let: {
+              id: '$sanctionnedId',
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$_id', '$$id'],
+                  },
+                },
+              },
+            ],
+            as: 'sanctioned',
           },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ['$_id', '$$id']
-                }
-              }
-            }
-          ],
-          'as': 'sanctioned'
-        }
-      }
+        },
       );
 
       //push the DOB filter stage in the pipeline
       if (body.dob) {
         akaPipeline.push({
           $lookup: {
-            from: "DateOfBirthList",
-            let: {id: "$sanctionnedId"},
-            pipeline: [{
-              $match: {
-                $expr: {
-                  $eq: ["$sanctionnedId", "$$id"],
+            from: 'DateOfBirthList',
+            let: { id: '$sanctionnedId' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$sanctionnedId', '$$id'],
+                  },
                 },
               },
-            },],
-            as: "dateOfBirth",
-          }
+            ],
+            as: 'dateOfBirth',
+          },
         });
       }
 
@@ -314,62 +323,55 @@ export class SearchService {
       if (body.nationality) {
         akaPipeline.push({
           $lookup: {
-            from: "NationalityList",
+            from: 'NationalityList',
             let: {
-              id: "$sanctionnedId",
+              id: '$sanctionnedId',
             },
-            pipeline: [{
-              $match: {
-                $expr: {
-                  $eq: ["$sanctionnedId", "$$id"],
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$sanctionnedId', '$$id'],
+                  },
                 },
               },
-            },],
-            as: "nationality",
-          }
+            ],
+            as: 'nationality',
+          },
         });
       }
-      akaPipeline.push(
-        {
-          
-          $project: {
-            _id: 0,
-            data: {
-              $arrayElemAt: [
-                '$sanctioned', 0
-              ]
-            },
-            dateOfBirth: {
-              '$arrayElemAt': [
-                '$dateOfBirth', 0
-              ]
-            },
-            nationality: {
-              '$arrayElemAt': [
-                '$nationality', 0
-              ]
-            },
-            score: { $meta: "searchScore" }
-          }
+      akaPipeline.push({
+        $project: {
+          _id: 0,
+          data: {
+            $arrayElemAt: ['$sanctioned', 0],
+          },
+          dateOfBirth: {
+            $arrayElemAt: ['$dateOfBirth', 0],
+          },
+          nationality: {
+            $arrayElemAt: ['$nationality', 0],
+          },
+          score: { $meta: 'searchScore' },
         },
-      );
+      });
       akaPipeline.push({ $limit: 10 });
-      const result: any = await this.prisma.akaList.aggregateRaw({ pipeline: akaPipeline })
+      const result: any = await this.prisma.akaList.aggregateRaw({
+        pipeline: akaPipeline,
+      });
       const cleanResult: any = await result.map((elt) => {
         const cleanData = this.helper.mapAka(elt, result[0].score);
         return cleanData;
       });
 
-      filtered =await this.helper.filterCompleteSearch(cleanResult, body)
+      filtered = await this.helper.filterCompleteSearch(cleanResult, body);
 
       return {
         resultsCount: filtered.length,
-        results: filtered
+        results: filtered,
       };
-
     }
 
-    throw {message: "incomplete data received"}
+    throw { message: 'incomplete data received' };
   }
-
 }

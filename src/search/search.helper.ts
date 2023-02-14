@@ -119,9 +119,31 @@ export class SearchHelper {
 
   compareDate(responseDate: string, bodyDate: string): boolean {
     console.log(responseDate);
-    const resDate = new Date(responseDate).toISOString().slice(0, 10);
-    console.log(resDate);
-    return resDate.includes(bodyDate);
+    if (responseDate.includes('/')) {
+      const date = responseDate.split('/');
+      if(Number(date[0])>31){
+        const resDate = new Date(date[0] + '-' + date[1] + '-' + date[2])
+        .toISOString()
+        .slice(0, 10);
+        return resDate.includes(bodyDate);
+      }
+      if(date.length > 2){
+        const resDate = new Date(date[2] + '-' + date[1] + '-' + date[0])
+        .toISOString()
+        .slice(0, 10);
+        return resDate.includes(bodyDate);
+      }
+      else{
+        const resDate = new Date(date[1] + '-' + date[0])
+        .toISOString()
+        .slice(0, 10);
+        return resDate.includes(bodyDate);
+      }
+    } else {
+      const resDate = new Date(responseDate).toISOString().slice(0, 10);
+      console.log(resDate);
+      return resDate.includes(bodyDate);
+    }
   }
 
   compareNationality(responseNationality: string, eltNationality): boolean {

@@ -1,12 +1,13 @@
 /* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { SanctionedDto } from './dto/sanctioned.output.dto';
-import * as i18nIsoCountries from 'i18n-iso-countries'
+import * as i18nIsoCountries from 'i18n-iso-countries';
+import { SearchCompleteDto } from './dto/search.complete.dto';
 
 @Injectable()
 export class SearchHelper {
   // map sanctioned data into sanctionedDto
-  mapSanctioned(result: any, max: number) : SanctionedDto {
+  mapSanctioned(result: any, max: number): SanctionedDto {
     const entity = {
       id: result._id.$oid,
       firstName: result.firstName,
@@ -14,7 +15,7 @@ export class SearchHelper {
       lastName: result.lastName,
       originalName: result.original_name,
       otherNames: result.otherNames,
-      sanction: result.sanction.name
+      sanction: result.sanction.name,
     };
 
     if (result.dateOfBirth != null)
@@ -28,7 +29,7 @@ export class SearchHelper {
   }
 
   // map aka data into sanctionedDto
-  mapAka(result: any, max) : SanctionedDto {
+  mapAka(result: any, max): SanctionedDto {
     const entity = {
       id: result.entity._id.$oid,
       firstName: result.entity.firstName,
@@ -55,7 +56,7 @@ export class SearchHelper {
   async cleanSearch(array1: any[], array2: any[]) {
     const cleanData: any[] = array1.concat(array2);
 
-    await cleanData.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    cleanData.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
     const indexes = [];
     const filtered = [];
 
@@ -75,11 +76,11 @@ export class SearchHelper {
   }
 
   //Apply nationality and date of birth filters to retrieved data
-  async filterCompleteSearch(response: any[], body: any) {
-    let filteredData: any[];
+  async filterCompleteSearch(response: any[], body: SearchCompleteDto) {
+    let filteredData = response;
 
     if (body.dob) {
-      filteredData = await response.filter((value: any) => {
+      filteredData = response.filter((value: any) => {
         if (value.entity.dateOfBirth) {
           return this.compareDate(value.entity.dateOfBirth, body.dob);
         }
@@ -87,13 +88,13 @@ export class SearchHelper {
       console.log(filteredData);
     }
 
-    if (body.nationality) {
-      filteredData = await response.filter((value: any) => {
+    if (body.nationality && body.nationality.length > 0) {
+      const nationalities: any = this.getBodyNationalityNames(body.nationality);
+      filteredData = response.filter((value: any) => {
         if (value.entity.nationality) {
-          return this.compareNationality(
-            value.entity.nationality,
-            body.nationality,
-          );
+          for (const element of nationalities) {
+            return this.compareNationality(value.entity.nationality, element);
+          }
         }
       });
       console.log(filteredData);
@@ -102,21 +103,35 @@ export class SearchHelper {
     return filteredData;
   }
 
-  
+  getBodyNationalityNames(nationalities: string[]) {
+    const result = nationalities.map((elt) => {
+      const countryCode = elt.toUpperCase();
+      const nameFr = i18nIsoCountries.getName(countryCode, 'fr');
+      const nameEn = i18nIsoCountries.getName(countryCode, 'en');
+      return {
+        nameFR: nameFr,
+        nameEn: nameEn,
+      };
+    });
+
+    return result;
+  }
+
   compareDate(responseDate: string, bodyDate: string): boolean {
+    console.log(responseDate);
     const resDate = new Date(responseDate).toISOString().slice(0, 10);
-    console.log(resDate.includes(bodyDate));
+    console.log(resDate);
     return resDate.includes(bodyDate);
   }
 
-  compareNationality(
-    responseNationality: string,
-    bodyNationality: string,
-  ): boolean {
+  compareNationality(responseNationality: string, eltNationality): boolean {
     const resNationality = responseNationality.toUpperCase();
-    const bodNationality = bodyNationality.toUpperCase();
+    const fr = eltNationality.nameFR.toUpperCase();
+    const en = eltNationality.nameEn.toUpperCase();
 
-    console.log(resNationality.includes(bodNationality));
-    return resNationality.includes(bodNationality);
+    let result = false;
+    if (resNationality.includes(fr) || resNationality.includes(en))
+      result = true;
+    return result;
   }
 }

@@ -383,7 +383,7 @@ export class SearchService {
       );
 
       //Request query to mongoDB
-      //----sanctioned
+      // //----sanctioned
       const sanctionedResult: any = await this.prisma.sanctioned.aggregateRaw({
         pipeline: sanctionedPipeline,
       });
@@ -413,10 +413,10 @@ export class SearchService {
         akaClean,
       );
 
-      //filtered = await this.helper.filterCompleteSearch(cleanResult, body);
+      filtered = await this.helper.filterCompleteSearch(cleanData, body);
       return {
-        resultsCount: cleanData.length,
-        results: cleanData,
+        resultsCount: filtered.length,
+        results: filtered,
       };
     }
 

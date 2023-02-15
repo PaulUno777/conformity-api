@@ -120,17 +120,28 @@ export class SearchHelper {
   }
 
   getBodyNationalityNames(nationalities: string[]) {
-    const result = nationalities.map((elt) => {
+    const result = nationalities.map(async (elt) => {
       const countryCode = elt.toUpperCase();
       const nameFr = i18nIsoCountries.getName(countryCode, 'fr');
       const nameEn = i18nIsoCountries.getName(countryCode, 'en');
-      return {
-        nameFR: nameFr,
-        nameEn: nameEn,
-      };
+
+      const arrayFr = this.transfarmName(nameFr);
+      const arrayEn = this.transfarmName(nameEn);
+
+      return await this.mergeSearch(arrayEn, arrayFr);
     });
 
     return result;
+  }
+
+  transfarmName(name: string): string[] {
+    let tempArray: Array<string> = [];
+    if (name.trim().includes(' ')) {
+      return name.trim().split(' ');
+    } else {
+      tempArray.push(name.trim());
+      return tempArray;
+    }
   }
 
   compareDate(responseDate: string, bodyDate: string): boolean {
@@ -163,12 +174,9 @@ export class SearchHelper {
 
   compareNationality(responseNationality: string, eltNationality): boolean {
     const resNationality = responseNationality.toUpperCase();
-    const fr = eltNationality.nameFR.toUpperCase();
-    const en = eltNationality.nameEn.toUpperCase();
-
+    const name = eltNationality.toUpperCase();
     let result = false;
-    if (resNationality.includes(fr) || resNationality.includes(en))
-      result = true;
+    if (resNationality.includes(name)) result = true;
     return result;
   }
 }

@@ -164,9 +164,7 @@ export class SearchService {
   }
 
   //========= Search  Complete Features ================
-
   async searchComplete(body: SearchCompleteDto) {
-    let filtered: any[];
     if (body.fullName) {
       //Request query to mongoDB
       //----sanctioned
@@ -363,7 +361,7 @@ export class SearchService {
         ],
       });
 
-      //clean data and map before
+      // map data
       //----sanctioned
       const sanctionedClean = await sanctionedResult.map((elt) => {
         const cleanData = this.helper.mapSanctioned(
@@ -372,19 +370,18 @@ export class SearchService {
         );
         return cleanData;
       });
-
+      //----aka
       const akaClean: any = await akaResult.map((elt) => {
         const cleanData = this.helper.mapAka(elt, akaResult[0].score);
         return cleanData;
       });
-
-      //merge sanctioned and aka result into one array and remove duplicate
+      //merge sanctioned and aka results into one array
       const cleanData = await this.helper.mergeSearch(
         sanctionedClean,
         akaClean,
       );
-
-      filtered = await this.helper.filterCompleteSearch(cleanData, body);
+      //apply filters on results
+      const filtered = await this.helper.filterCompleteSearch(cleanData, body);
       return {
         resultsCount: filtered.length,
         results: filtered,

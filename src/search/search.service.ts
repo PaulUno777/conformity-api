@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchHelper } from './search.helper';
 import { SearchCompleteDto } from './dto/search.complete.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SearchService {
-  constructor(private prisma: PrismaService, private helper: SearchHelper) {}
+  constructor(
+    private prisma: PrismaService,
+    private helper: SearchHelper,
+    private config: ConfigService,
+  ) {}
 
   //========= Simple Search Features ================
   async search(text: string) {
@@ -41,6 +46,44 @@ export class SearchService {
             },
           },
           {
+            $lookup: {
+              from: 'DateOfBirthList',
+              let: {
+                id: '$_id',
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$sanctionnedId', '$$id'],
+                    },
+                  },
+                },
+                { $project: { _id: 0, date: 1 } },
+              ],
+              as: 'dateOfBirth',
+            },
+          },
+          {
+            $lookup: {
+              from: 'NationalityList',
+              let: {
+                id: '$_id',
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$sanctionnedId', '$$id'],
+                    },
+                  },
+                },
+                { $project: { _id: 0, country: 1 } },
+              ],
+              as: 'nationality',
+            },
+          },
+          {
             $project: {
               firstName: 1,
               middleName: 1,
@@ -49,6 +92,12 @@ export class SearchService {
               otherNames: 1,
               sanction: {
                 $arrayElemAt: ['$sanction', 0],
+              },
+              dateOfBirth: {
+                $arrayElemAt: ['$dateOfBirth', 0],
+              },
+              nationality: {
+                $arrayElemAt: ['$nationality', 0],
               },
               score: { $meta: 'searchScore' },
             },
@@ -117,6 +166,42 @@ export class SearchService {
             },
           },
           {
+            $lookup: {
+              from: 'DateOfBirthList',
+              let: { id: '$sanctionnedId' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$sanctionnedId', '$$id'],
+                    },
+                  },
+                },
+                { $project: { _id: 0, date: 1 } },
+              ],
+              as: 'dateOfBirth',
+            },
+          },
+          {
+            $lookup: {
+              from: 'NationalityList',
+              let: {
+                id: '$sanctionnedId',
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$sanctionnedId', '$$id'],
+                    },
+                  },
+                },
+                { $project: { _id: 0, country: 1 } },
+              ],
+              as: 'nationality',
+            },
+          },
+          {
             $project: {
               _id: 0,
               entity: {
@@ -125,9 +210,13 @@ export class SearchService {
               sanction: {
                 $arrayElemAt: ['$sanction', 0],
               },
-              score: {
-                $meta: 'searchScore',
+              dateOfBirth: {
+                $arrayElemAt: ['$dateOfBirth', 0],
               },
+              nationality: {
+                $arrayElemAt: ['$nationality', 0],
+              },
+              score: { $meta: 'searchScore' },
             },
           },
           { $limit: 15 },
@@ -153,9 +242,17 @@ export class SearchService {
         sanctionedClean,
         akaClean,
       );
+      const downloadUrl = this.config.get('DOWNLOAD_URL');
+      const excelData = this.helper.mapExcelData(
+        cleanData,
+        text,
+        cleanData.length,
+      );
 
+      const file = await this.helper.generateExcel(excelData, text);
       return {
         resultsCount: cleanData.length,
+        resultsFile: `${downloadUrl}${file}`,
         results: cleanData,
       };
     }
@@ -382,8 +479,19 @@ export class SearchService {
       );
       //apply filters on results
       const filtered = await this.helper.filterCompleteSearch(cleanData, body);
+
+      //ggenerate Excel file
+      const downloadUrl = this.config.get('DOWNLOAD_URL');
+      const excelData = this.helper.mapExcelData(
+        filtered,
+        body.fullName,
+        filtered.length,
+      );
+
+      const file = await this.helper.generateExcel(excelData, body.fullName);
       return {
         resultsCount: filtered.length,
+        resultsFile: `${downloadUrl}${file}`,
         results: filtered,
       };
     }

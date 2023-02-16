@@ -15,11 +15,15 @@ import { SearchService } from './search.service';
 import { SearchCompleteDto } from './dto/search.complete.dto';
 import { join } from 'path';
 import { createReadStream } from 'fs';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('search')
 @ApiTags('search')
 export class SearchController {
-  constructor(private readonly searchService: SearchService) {}
+  constructor(
+    private readonly searchService: SearchService,
+    private config: ConfigService,
+  ) {}
 
   @ApiQuery({
     name: 'text',
@@ -42,9 +46,8 @@ export class SearchController {
   @Header('Content-Type', 'application/xlsx')
   @Get('download/:file')
   async download(@Param('file') fileName, @Res() response: Response) {
-    const file: any = createReadStream(
-      join(process.cwd(), 'public/' + fileName),
-    );
+    const dir = this.config.get('FILE_LOCATION');
+    const file: any = createReadStream(join(process.cwd(), dir + fileName));
     file.pipe(response);
   }
 }

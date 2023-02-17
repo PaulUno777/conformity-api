@@ -1,10 +1,12 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 const mysql = require('mysql2/promise');
 
 @Injectable()
 export class MigrationHelper {
-  constructor(private config: ConfigService) { }
+  constructor(private config: ConfigService) {}
 
   //=========MySQL connector================
   async mysqlConnect(): Promise<any> {
@@ -17,7 +19,7 @@ export class MigrationHelper {
   transformId(id: number): string {
     if (!id) return '';
     let tempId: string;
-    let count: number = 0;
+    let count = 0;
 
     tempId = id.toString();
     const length = 24 - tempId.length;
@@ -33,7 +35,50 @@ export class MigrationHelper {
   //Timestamp tranform to string
   transformDate(date: Date): string {
     const TIME_ZONE = Number(this.config.get('TIME_ZONE'));
-    date.setTime(date.getTime()+(TIME_ZONE*60*60*1000));
+    date.setTime(date.getTime() + TIME_ZONE * 60 * 60 * 1000);
     return date.toISOString().slice(0, 19).replace('T', ' ');
+  }
+
+  //tranform date of birth
+  formatDate(date) {
+    if (date.length <= 4) {
+      const resDate = new Date(date + '-01-01').toISOString().slice(0, 10);
+      return resDate;
+    }
+    if (date.includes('/') || date.includes('-')) {
+      
+      const reg = /[-/\\]/;
+      const tempDate = date.split(reg);
+
+      if (date.length <= 7) {
+        if (tempDate[0].length < 3) {
+          const dateString = `${tempDate[1]}-${tempDate[0]}-01`
+          const resDate = new Date(dateString)
+            .toISOString()
+            .slice(0, 10);
+          return resDate;
+        } else {
+          const dateString = `${tempDate[0]}-${tempDate[1]}-01`
+          const resDate = new Date(dateString)
+            .toISOString()
+            .slice(0, 10);
+          return resDate;
+        }
+      } else {
+        if (tempDate[0].length < 3) {
+          const dateString = `${tempDate[2]}-${tempDate[1]}-${tempDate[0]}`
+          const resDate = new Date(dateString)
+            .toISOString()
+            .slice(0, 10);
+          return resDate;
+        } else {
+          const dateString = `${tempDate[0]}-${tempDate[1]}-${tempDate[2]}`
+          const resDate = new Date(dateString)
+            .toISOString()
+            .slice(0, 10);
+          return resDate;
+        }
+      }
+    }
   }
 }

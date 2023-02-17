@@ -93,12 +93,17 @@ export class SearchHelper {
     let filteredData = response;
 
     if (body.dob) {
-      filteredData = response.filter((value: any) => {
+      console.log('date filter ---> \n');
+      const tempData = []
+      let check: boolean
+       response.forEach((value: any) => {
         if (value.entity.dateOfBirth) {
-          return this.checkDate(value.entity.dateOfBirth, body.dob);
+          console.log(this.checkDate(value.entity.dateOfBirth, body.dob));
+          check = this.checkDate(value.entity.dateOfBirth, body.dob);
+          if(check) tempData.push(value);
         }
       });
-      console.log('date filter ---> \n', filteredData);
+      filteredData = tempData;
     }
 
     if (
@@ -112,9 +117,6 @@ export class SearchHelper {
       filteredData.forEach((value: any) => {
         if (value.entity.nationality) {
           for (const element of nationalities) {
-            console.log(
-              this.checkNationality(value.entity.nationality, element),
-            );
             const test = this.checkNationality(
               value.entity.nationality,
               element,
@@ -129,9 +131,7 @@ export class SearchHelper {
       filteredData = tempArray;
     }
 
-    const cleanData = this.removeDuplicate(filteredData);
-
-    return cleanData;
+    return filteredData;
   }
 
   //generate excel file and return path
@@ -359,30 +359,59 @@ export class SearchHelper {
   }
 
   checkDate(responseDate: string, bodyDate: string): boolean {
-    console.log(responseDate);
-    if (responseDate.includes('/')) {
-      const date = responseDate.split('/');
-      if (Number(date[0]) > 31) {
-        const resDate = new Date(date[0] + '-' + date[1] + '-' + date[2])
-          .toISOString()
-          .slice(0, 10);
-        return resDate.includes(bodyDate);
-      }
-      if (date.length > 2) {
-        const resDate = new Date(date[2] + '-' + date[1] + '-' + date[0])
-          .toISOString()
-          .slice(0, 10);
-        return resDate.includes(bodyDate);
+    const formatedDate = this.formatDate(responseDate);
+    let check = false
+    if(bodyDate.includes('-')){
+      const[year, month] = bodyDate.trim().split('-')
+      if(formatedDate.year == year && formatedDate.month == month) check = true
+    }else{
+      if(formatedDate.year == bodyDate.trim()) check = true
+    }
+    return check;
+  }
+
+  formatDate(date) {
+    if (date.length <= 4) {
+      return {
+        day: '01',
+        month: '01',
+        year: date
+      };
+    }
+    if (date.includes('/') || date.includes('-')) {
+      
+      const reg = /[-/\\]/;
+      const tempDate = date.split(reg);
+
+      if (date.length <= 7) {
+        if (tempDate[0].length < 3) {
+          return {
+            day: '01',
+            month: tempDate[0],
+            year: tempDate[1]
+          };
+        } else {
+          return {
+            day: '01',
+            month: tempDate[1],
+            year: tempDate[0]
+          };
+        }
       } else {
-        const resDate = new Date(date[1] + '-' + date[0])
-          .toISOString()
-          .slice(0, 10);
-        return resDate.includes(bodyDate);
+        if (tempDate[0].length < 3) {
+          return {
+            day: tempDate[0],
+            month: tempDate[1],
+            year: tempDate[2]
+          };
+        } else {
+          return {
+            day: tempDate[2],
+            month: tempDate[1],
+            year: tempDate[0]
+          };
+        }
       }
-    } else {
-      const resDate = new Date(responseDate).toISOString().slice(0, 10);
-      console.log(resDate);
-      return resDate.includes(bodyDate);
     }
   }
 

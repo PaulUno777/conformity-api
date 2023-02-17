@@ -93,12 +93,11 @@ export class SearchHelper {
     let filteredData = response;
 
     if (body.dob) {
-      console.log('date filter ---> \n');
+      console.log('date filter ---> ');
       const tempData = []
       let check: boolean
        response.forEach((value: any) => {
         if (value.entity.dateOfBirth) {
-          console.log(this.checkDate(value.entity.dateOfBirth, body.dob));
           check = this.checkDate(value.entity.dateOfBirth, body.dob);
           if(check) tempData.push(value);
         }
@@ -112,7 +111,7 @@ export class SearchHelper {
       body.nationality != null
     ) {
       const nationalities: any = this.getBodyNationalityNames(body.nationality);
-      console.log('natinality filter ---> \n', nationalities);
+      console.log('natinality filter ---> ');
       const tempArray = [];
       filteredData.forEach((value: any) => {
         if (value.entity.nationality) {
@@ -250,7 +249,7 @@ export class SearchHelper {
     const name = `${searchInput}.xlsx`;
     const fileName = name.replace(/\s/g, '');
     const publicDir = this.config.get('FILE_LOCATION');
-    const pathToFile = this.config.get('FILE_LOCATION') + fileName;
+    const pathToFile = publicDir+fileName;
 
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir);

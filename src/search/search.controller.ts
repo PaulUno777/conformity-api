@@ -8,9 +8,9 @@ import {
   HttpStatus,
   Header,
   Param,
-  Res,
+  StreamableFile,
+  Response,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { ApiExcludeEndpoint, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import { SearchCompleteDto } from './dto/search.complete.dto';
@@ -37,6 +37,34 @@ export class SearchController {
     return this.searchService.search(String(query.text));
   }
 
+  @ApiQuery({
+    name: 'fullName',
+    description: 'text to search',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'dob',
+    description: 'date of birth of entity',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'nationality',
+    description: 'natinality of entity',
+    required: true,
+    type: 'array[string]',
+  })
+  @Get('complete')
+  findCompeteGet(@Query() query: Record<string, any>) {
+    const body = {
+      fullName: query.fullName,
+      dob: query.dob,
+      nationality: JSON.parse(query.nationality),
+    };
+    return this.searchService.searchComplete(body);
+  }
+
   @Post()
   findComplete(@Body() body: SearchCompleteDto) {
     return this.searchService.searchComplete(body);
@@ -46,9 +74,17 @@ export class SearchController {
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/xlsx')
   @Get('download/:file')
-  async download(@Param('file') fileName, @Res() response: Response) {
+  download(
+    @Param('file') fileName,
+    @Response({ passthrough: true }) res,
+  ): StreamableFile {
+    res.set({
+      'Content-Type': 'application/xlsx',
+      'Content-Disposition': 'attachment; filename="seach-result.xlsx',
+    });
     const dir = this.config.get('FILE_LOCATION');
     const file: any = createReadStream(join(process.cwd(), dir + fileName));
-    file.pipe(response);
+    return new StreamableFile(file);
+    //file.pipe(response);
   }
 }

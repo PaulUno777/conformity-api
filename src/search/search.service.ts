@@ -488,10 +488,10 @@ export class SearchService {
         filtered.length,
       );
 
-      //const file = await this.helper.generateExcel(excelData, body.fullName);
+      const file = await this.helper.generateExcel(excelData, body.fullName);
       return {
         resultsCount: filtered.length,
-        //resultsFile: `${downloadUrl}${file}`,
+        resultsFile: `${downloadUrl}${file}`,
         results: filtered,
       };
     }

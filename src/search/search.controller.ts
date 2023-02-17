@@ -46,22 +46,26 @@ export class SearchController {
   @ApiQuery({
     name: 'dob',
     description: 'date of birth of entity',
-    required: true,
+    required: false,
     type: 'string',
   })
   @ApiQuery({
     name: 'nationality',
     description: 'natinality of entity',
-    required: true,
-    type: 'array[string]',
+    required: false,
+    type: 'string',
   })
   @Get('complete')
   findCompeteGet(@Query() query: Record<string, any>) {
     const body = {
-      fullName: query.fullName,
-      dob: query.dob,
-      nationality: JSON.parse(query.nationality),
+      fullName: '',
     };
+    if (query.fullName) body['fullName'] = String(query.fullName);
+    if (query.dob) body['dob'] = query.dob;
+    if (query.nationality) body['nationality'] = JSON.parse(query.nationality);
+
+    console.log(body);
+
     return this.searchService.searchComplete(body);
   }
 

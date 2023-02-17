@@ -10,6 +10,7 @@ import {
   Param,
   Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiExcludeEndpoint, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import { SearchCompleteDto } from './dto/search.complete.dto';

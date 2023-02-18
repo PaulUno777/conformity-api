@@ -414,6 +414,7 @@ export class SearchHelper {
     }
   }
 
+  //transform score into percentage
   checkNationality(santionedNationality: string, countryName): boolean {
     const nationality = santionedNationality.toUpperCase();
     const country = countryName.toUpperCase();
@@ -421,6 +422,7 @@ export class SearchHelper {
     const test = nationality.includes(country) || country.includes(nationality);
     return test;
   }
+
   //transform score into percentage
   setPercentage(scoreMax: number, score: number): number {
     const data = (score * 100) / scoreMax;

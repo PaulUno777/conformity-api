@@ -140,3 +140,9 @@ enum Gender {
   M
   F
 }
+
+type dateOfBith {
+  day String @default("01")
+  month String @default("01")
+  year String
+}

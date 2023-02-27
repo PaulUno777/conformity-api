@@ -11,7 +11,7 @@ import * as fs from 'fs';
 export class SearchHelper {
   constructor(private config: ConfigService) {}
   // map sanctioned data into sanctionedDto
-  mapSanctioned(result: any, max: number): SanctionedDto {
+  mapSanctioned(result: any): SanctionedDto {
     const entity = {
       id: result._id.$oid,
       firstName: result.firstName,
@@ -27,13 +27,13 @@ export class SearchHelper {
     if (result.nationality != null)
       entity['nationality'] = result.nationality.country;
 
-    const score: number = this.setPercentage(max, result.score);
+    const score: number = this.setPercentage(result.score);
 
     return { entity, score };
   }
 
   // map aka data into sanctionedDto
-  mapAka(result: any, max): SanctionedDto {
+  mapAka(result: any): SanctionedDto {
     const entity = {
       id: result.entity._id.$oid,
       firstName: result.entity.firstName,
@@ -51,7 +51,7 @@ export class SearchHelper {
     if (result.nationality != null)
       entity['nationality'] = result.nationality.country;
 
-    const score: number = this.setPercentage(max, result.score);
+    const score: number = this.setPercentage(result.score);
 
     return { entity, score };
   }
@@ -94,12 +94,12 @@ export class SearchHelper {
 
     if (body.dob) {
       console.log('date filter ---> ');
-      const tempData = []
-      let check: boolean
-       response.forEach((value: any) => {
+      const tempData = [];
+      let check: boolean;
+      response.forEach((value: any) => {
         if (value.entity.dateOfBirth) {
           check = this.checkDate(value.entity.dateOfBirth, body.dob);
-          if(check) tempData.push(value);
+          if (check) tempData.push(value);
         }
       });
       filteredData = tempData;
@@ -182,7 +182,7 @@ export class SearchHelper {
       // });
 
       if (row.getCell('H').value == 0) {
-        ['B','C','D','E', 'F'].forEach((key) => {
+        ['B', 'C', 'D', 'E', 'F'].forEach((key) => {
           row.getCell(key).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -202,7 +202,7 @@ export class SearchHelper {
             bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
           };
         });
-        ['B','C','D','E', 'F'].forEach((key) => {
+        ['B', 'C', 'D', 'E', 'F'].forEach((key) => {
           row.getCell(key).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -228,7 +228,7 @@ export class SearchHelper {
             bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
           };
         });
-        ['B','C','D','E', 'F'].map((key) => {
+        ['B', 'C', 'D', 'E', 'F'].map((key) => {
           row.getCell(key).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -245,11 +245,11 @@ export class SearchHelper {
       row.commit();
     });
 
-    //write the 
+    //write the
     const name = `${searchInput}.xlsx`;
     const fileName = name.replace(/\s/g, '');
     const publicDir = this.config.get('FILE_LOCATION');
-    const pathToFile = publicDir+fileName;
+    const pathToFile = publicDir + fileName;
 
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir);
@@ -271,55 +271,60 @@ export class SearchHelper {
   //clean data
   mapExcelData(array: any[], searchInput: string, resultCount: number): any[] {
     const cleanData = [];
-    
-      if (resultCount > 0) {
-        let dateOfBirth = null;
-        let nationality = null;
-        
-        cleanData.push({
-          style: 1,
-          searchInput: searchInput,
-          result: 'Potential match detected',
-          matchRate: array[0].score + ' %',
-        });
-        array.forEach((elt, index) => {
-          let name = ''
-          if (elt.entity.dateOfBirth) dateOfBirth = elt.entity.dateOfBirth
-          if (elt.entity.nationality) nationality = elt.entity.nationality
 
-          if (elt.entity.firstName || elt.entity.middleName || elt.entity.lastName){
-            if (elt.entity.firstName != null) name = name +' '+ elt.entity.firstName;
-            if (elt.entity.middleName != null) name = name +' '+  elt.entity.middleName;
-            if (elt.entity.lastName != null) name = name +' '+  elt.entity.lastName;
-          }else{
-            if (elt.entity.originalName != null){
-              name = name +' '+  elt.entity.originalName;
-            }else{
-              for (const value of elt.entity.otherNames) {
-                name = name +' '+  value;
-              }
-            } 
+    if (resultCount > 0) {
+      let dateOfBirth = null;
+      let nationality = null;
+
+      cleanData.push({
+        style: 1,
+        searchInput: searchInput,
+        result: 'Potential match detected',
+        matchRate: array[0].score + ' %',
+      });
+      array.forEach((elt, index) => {
+        let name = '';
+        if (elt.entity.dateOfBirth) dateOfBirth = elt.entity.dateOfBirth;
+        if (elt.entity.nationality) nationality = elt.entity.nationality;
+
+        if (
+          elt.entity.firstName ||
+          elt.entity.middleName ||
+          elt.entity.lastName
+        ) {
+          if (elt.entity.firstName != null)
+            name = name + ' ' + elt.entity.firstName;
+          if (elt.entity.middleName != null)
+            name = name + ' ' + elt.entity.middleName;
+          if (elt.entity.lastName != null)
+            name = name + ' ' + elt.entity.lastName;
+        } else {
+          if (elt.entity.originalName != null) {
+            name = name + ' ' + elt.entity.originalName;
+          } else {
+            for (const value of elt.entity.otherNames) {
+              name = name + ' ' + value;
+            }
           }
+        }
 
-          cleanData.push({
-            style: 3,
-            result: `${index}. (${elt.score}%) - ${name}`,
-            sanction: elt.entity.sanction,
-            dob: dateOfBirth,
-            nationality: nationality,
-            link: `todoByFrontDev/${elt.entity.id}`
-          }); 
-        });
-       
-      } else {
         cleanData.push({
-          style : 0,
-          searchInput: searchInput,
-          result: 'No match detected',
-          matchRate: '0.00 %',
+          style: 3,
+          result: `${index}. (${elt.score}%) - ${name}`,
+          sanction: elt.entity.sanction,
+          dob: dateOfBirth,
+          nationality: nationality,
+          link: `todoByFrontDev/${elt.entity.id}`,
         });
-      }
-    
+      });
+    } else {
+      cleanData.push({
+        style: 0,
+        searchInput: searchInput,
+        result: 'No match detected',
+        matchRate: '0.00 %',
+      });
+    }
 
     return cleanData;
   }
@@ -357,61 +362,16 @@ export class SearchHelper {
     }
   }
 
-  checkDate(responseDate: string, bodyDate: string): boolean {
-    const formatedDate = this.formatDate(responseDate);
-    let check = false
-    if(bodyDate.includes('-')){
-      const[year, month] = bodyDate.trim().split('-')
-      if(formatedDate.year == year && formatedDate.month == month) check = true
-    }else{
-      if(formatedDate.year == bodyDate.trim()) check = true
+  checkDate(responseDate, bodyDate: string): boolean {
+    let check = false;
+    if (bodyDate.includes('-')) {
+      const [year, month] = bodyDate.trim().split('-');
+      if (responseDate.year == year && responseDate.month == month)
+        check = true;
+    } else {
+      if (responseDate.year == bodyDate.trim()) check = true;
     }
     return check;
-  }
-
-  formatDate(date) {
-    if (date.length <= 4) {
-      return {
-        day: '01',
-        month: '01',
-        year: date
-      };
-    }
-    if (date.includes('/') || date.includes('-')) {
-      
-      const reg = /[-/\\]/;
-      const tempDate = date.split(reg);
-
-      if (date.length <= 7) {
-        if (tempDate[0].length < 3) {
-          return {
-            day: '01',
-            month: tempDate[0],
-            year: tempDate[1]
-          };
-        } else {
-          return {
-            day: '01',
-            month: tempDate[1],
-            year: tempDate[0]
-          };
-        }
-      } else {
-        if (tempDate[0].length < 3) {
-          return {
-            day: tempDate[0],
-            month: tempDate[1],
-            year: tempDate[2]
-          };
-        } else {
-          return {
-            day: tempDate[2],
-            month: tempDate[1],
-            year: tempDate[0]
-          };
-        }
-      }
-    }
   }
 
   //transform score into percentage
@@ -424,8 +384,8 @@ export class SearchHelper {
   }
 
   //transform score into percentage
-  setPercentage(scoreMax: number, score: number): number {
-    const data = (score * 100) / scoreMax;
+  setPercentage( score: number): number {
+    const data = score * 100;
     return Number(data.toFixed(2));
   }
 }

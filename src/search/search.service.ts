@@ -84,6 +84,25 @@ export class SearchService {
             },
           },
           {
+            $addFields: {
+              searchScore: { $meta: 'searchScore' },
+            },
+          },
+          {
+            $setWindowFields: {
+              output: {
+                searchMaxScore: { $max: '$searchScore' },
+              },
+            },
+          },
+          {
+            $addFields: {
+              searchNormalizedScore: {
+                $divide: ['$searchScore', '$searchMaxScore'],
+              },
+            },
+          },
+          {
             $project: {
               firstName: 1,
               middleName: 1,
@@ -99,7 +118,9 @@ export class SearchService {
               nationality: {
                 $arrayElemAt: ['$nationality', 0],
               },
-              score: { $meta: 'searchScore' },
+              initialScore: '$searchScore',
+              maxScore: '$searchMaxScore',
+              score: '$searchNormalizedScore',
             },
           },
           { $limit: 15 },
@@ -202,6 +223,25 @@ export class SearchService {
             },
           },
           {
+            $addFields: {
+              searchScore: { $meta: 'searchScore' },
+            },
+          },
+          {
+            $setWindowFields: {
+              output: {
+                searchMaxScore: { $max: '$searchScore' },
+              },
+            },
+          },
+          {
+            $addFields: {
+              searchNormalizedScore: {
+                $divide: ['$searchScore', '$searchMaxScore'],
+              },
+            },
+          },
+          {
             $project: {
               _id: 0,
               entity: {
@@ -216,7 +256,9 @@ export class SearchService {
               nationality: {
                 $arrayElemAt: ['$nationality', 0],
               },
-              score: { $meta: 'searchScore' },
+              initialScore: '$searchScore',
+              maxScore: '$searchMaxScore',
+              score: '$searchNormalizedScore',
             },
           },
           { $limit: 15 },
@@ -225,15 +267,12 @@ export class SearchService {
 
       //clean data and map before sending
       const sanctionedClean: any[] = await sanctionedResult.map((elt) => {
-        const cleanData = this.helper.mapSanctioned(
-          elt,
-          sanctionedResult[0].score,
-        );
+        const cleanData = this.helper.mapSanctioned(elt);
         return cleanData;
       });
 
       const akaClean: any[] = await akaResult.map((elt) => {
-        const cleanData = this.helper.mapAka(elt, akaResult[0].score);
+        const cleanData = this.helper.mapAka(elt);
         return cleanData;
       });
 
@@ -327,6 +366,25 @@ export class SearchService {
             },
           },
           {
+            $addFields: {
+              searchScore: { $meta: 'searchScore' },
+            },
+          },
+          {
+            $setWindowFields: {
+              output: {
+                searchMaxScore: { $max: '$searchScore' },
+              },
+            },
+          },
+          {
+            $addFields: {
+              searchNormalizedScore: {
+                $divide: ['$searchScore', '$searchMaxScore'],
+              },
+            },
+          },
+          {
             $project: {
               firstName: 1,
               middleName: 1,
@@ -342,12 +400,15 @@ export class SearchService {
               nationality: {
                 $arrayElemAt: ['$nationality', 0],
               },
-              score: { $meta: 'searchScore' },
+              initialScore: '$searchScore',
+              maxScore: '$searchMaxScore',
+              score: '$searchNormalizedScore',
             },
           },
           { $limit: 20 },
         ],
       });
+
       //----aka
       const akaResult: any = await this.prisma.akaList.aggregateRaw({
         pipeline: [
@@ -437,6 +498,25 @@ export class SearchService {
             },
           },
           {
+            $addFields: {
+              searchScore: { $meta: 'searchScore' },
+            },
+          },
+          {
+            $setWindowFields: {
+              output: {
+                searchMaxScore: { $max: '$searchScore' },
+              },
+            },
+          },
+          {
+            $addFields: {
+              searchNormalizedScore: {
+                $divide: ['$searchScore', '$searchMaxScore'],
+              },
+            },
+          },
+          {
             $project: {
               _id: 0,
               entity: {
@@ -451,7 +531,9 @@ export class SearchService {
               nationality: {
                 $arrayElemAt: ['$nationality', 0],
               },
-              score: { $meta: 'searchScore' },
+              initialScore: '$searchScore',
+              maxScore: '$searchMaxScore',
+              score: '$searchNormalizedScore',
             },
           },
           { $limit: 20 },
@@ -461,15 +543,12 @@ export class SearchService {
       // map data
       //----sanctioned
       const sanctionedClean = await sanctionedResult.map((elt) => {
-        const cleanData = this.helper.mapSanctioned(
-          elt,
-          sanctionedResult[0].score,
-        );
+        const cleanData = this.helper.mapSanctioned(elt);
         return cleanData;
       });
       //----aka
       const akaClean: any = await akaResult.map((elt) => {
-        const cleanData = this.helper.mapAka(elt, akaResult[0].score);
+        const cleanData = this.helper.mapAka(elt);
         return cleanData;
       });
       //merge sanctioned and aka results into one array

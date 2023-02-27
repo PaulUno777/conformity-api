@@ -69,7 +69,7 @@ model DateOfBirthList {
   sanctionned   Sanctioned @relation(fields: [sanctionnedId], references: [id])
   sanctionnedId String     @db.ObjectId
 
-  date      String
+  date      DateOfBith
   mainEntry Int     @default(1)
   comment   String?
 
@@ -141,8 +141,8 @@ enum Gender {
   F
 }
 
-type dateOfBith {
-  day String @default("01")
-  month String @default("01")
-  year String
+type DateOfBith {
+  day String?
+  month String?
+  year String?
 }

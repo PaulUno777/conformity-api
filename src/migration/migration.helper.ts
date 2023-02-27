@@ -41,9 +41,19 @@ export class MigrationHelper {
 
   //tranform date of birth
   formatDate(date) {
+    if (date.length < 6 && date.length > 4) {
+      return {
+        day: null,
+        month: null,
+        year: null,
+      };
+    }
     if (date.length <= 4) {
-      const resDate = new Date(date + '-01-01').toISOString().slice(0, 10);
-      return resDate;
+      return {
+        day: null,
+        month: null,
+        year: date
+      };
     }
     if (date.includes('/') || date.includes('-')) {
       
@@ -52,31 +62,31 @@ export class MigrationHelper {
 
       if (date.length <= 7) {
         if (tempDate[0].length < 3) {
-          const dateString = `${tempDate[1]}-${tempDate[0]}-01`
-          const resDate = new Date(dateString)
-            .toISOString()
-            .slice(0, 10);
-          return resDate;
+          return {
+            day: null,
+            month: tempDate[0],
+            year: tempDate[1]
+          };
         } else {
-          const dateString = `${tempDate[0]}-${tempDate[1]}-01`
-          const resDate = new Date(dateString)
-            .toISOString()
-            .slice(0, 10);
-          return resDate;
+          return {
+            day: null,
+            month: tempDate[1],
+            year: tempDate[0]
+          };
         }
       } else {
         if (tempDate[0].length < 3) {
-          const dateString = `${tempDate[2]}-${tempDate[1]}-${tempDate[0]}`
-          const resDate = new Date(dateString)
-            .toISOString()
-            .slice(0, 10);
-          return resDate;
+          return {
+            day: tempDate[0],
+            month: tempDate[1],
+            year: tempDate[2]
+          };
         } else {
-          const dateString = `${tempDate[0]}-${tempDate[1]}-${tempDate[2]}`
-          const resDate = new Date(dateString)
-            .toISOString()
-            .slice(0, 10);
-          return resDate;
+          return {
+            day: tempDate[2],
+            month: tempDate[1],
+            year: tempDate[0]
+          };
         }
       }
     }

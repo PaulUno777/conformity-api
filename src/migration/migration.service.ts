@@ -8,43 +8,43 @@ export class MigrationService {
 
   //=========Main method for all Migrations================
   async migrateAllToMongo() {
-    const resSantion = await this.migrateSantionToMongo();
-    const resSantioned = await this.migrateSantionedToMongo();
-    const resPlace = await this.migratePlaceOfBirthListToMongo();
+    // const resSantion = await this.migrateSantionToMongo();
+    // const resSantioned = await this.migrateSantionedToMongo();
+    // const resPlace = await this.migratePlaceOfBirthListToMongo();
     const resDate = await this.migrateDateOfBirthListToMongo();
-    const resNat = await this.migrateNationalityListToMongo();
-    const resCit = await this.migrateCitizenshipListToMongo();
-    const resAka = await this.migrateAkaListToMongo();
+    // const resNat = await this.migrateNationalityListToMongo();
+    // const resCit = await this.migrateCitizenshipListToMongo();
+    // const resAka = await this.migrateAkaListToMongo();
 
     return [
-      resSantion,
-      resSantioned,
-      resPlace,
+      // resSantion,
+      // resSantioned,
+      // resPlace,
       resDate,
-      resNat,
-      resCit,
-      resAka,
+      // resNat,
+      // resCit,
+      // resAka,
     ];
   }
 
   //=========Main method for all Updates================
   async updateAllToMongo() {
-    const resSantion = await this.updateSantionToMongo();
-    const resSantioned = await this.updateSantionedToMongo();
-    const resPlace = await this.updatePlaceOfBirthListToMongo();
+    // const resSantion = await this.updateSantionToMongo();
+    // const resSantioned = await this.updateSantionedToMongo();
+    // const resPlace = await this.updatePlaceOfBirthListToMongo();
     const resDate = await this.updateDateOfBirthListToMongo();
-    const resNat = await this.updateNationalityListToMongo();
-    const resCit = await this.updateCitizenshipListToMongo();
-    const resAka = await this.updateAkaListToMongo();
+    // const resNat = await this.updateNationalityListToMongo();
+    // const resCit = await this.updateCitizenshipListToMongo();
+    // const resAka = await this.updateAkaListToMongo();
 
     return [
-      resSantion,
-      resSantioned,
-      resPlace,
+      // resSantion,
+      // resSantioned,
+      // resPlace,
       resDate,
-      resNat,
-      resCit,
-      resAka,
+      // resNat,
+      // resCit,
+      // resAka,
     ];
   }
 
@@ -324,11 +324,13 @@ export class MigrationService {
     connection.close();
 
     //cleanup data
-    const cleanData = table.map((elt) => {
+    const cleanData = await table.map((elt) => {
+      const date = this.helper.formatDate(elt.date);
+
       return {
         id: this.helper.transformId(elt.id),
         sanctionnedId: this.helper.transformId(elt.sanctioned_id),
-        date: elt.date,
+        date: date,
         comment: elt.comment,
         mainEntry: elt.main_entry,
         updatedAt: elt.updated_at,
@@ -336,28 +338,30 @@ export class MigrationService {
       };
     });
 
-    // // test we have alreading migrate data
-    const testData = await this.prisma.dateOfBirthList.findUnique({
-      where: { id: cleanData[0].id },
+    const logData = cleanData.filter((data) => {
+      return !data.date;
     });
 
-    //push data in data in batches of 1000 to avoid errors and timeouts
-    if (!testData) {
-      let data: any[];
-      let result;
-      let count = 0;
-      for (let i = 0; i <= cleanData.length; i += 1000) {
-        if (i >= cleanData.length) i = cleanData.length;
-        data = cleanData.slice(i, i + 1000);
-        if (data.length > 0) {
-          result = await this.prisma.dateOfBirthList.createMany({ data: data });
-        }
-        count += result;
+    console.log(logData);
+
+    await this.prisma.dateOfBirthList.deleteMany({});
+
+    console.log(` dateOfBirthList element(s) deleted`);
+
+    let data: any[];
+    let result;
+    let count = 0;
+    for (let i = 0; i <= cleanData.length; i += 1000) {
+      if (i >= cleanData.length) i = cleanData.length;
+      data = cleanData.slice(i, i + 1000);
+      if (data.length > 0) {
+        result = await this.prisma.dateOfBirthList.createMany({ data: data });
       }
-      return { message: `${count} dateOfBirthList element(s) migrated` };
+      count += result;
     }
-    return { message: "no dateOfBirthList's element migrated" };
+    return { message: `${count} dateOfBirthList element(s) migrated` };
   }
+
   //----- Update database -------
   async updateDateOfBirthListToMongo() {
     //Get the last updated element from mongoDB

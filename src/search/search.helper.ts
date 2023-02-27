@@ -273,7 +273,7 @@ export class SearchHelper {
     const cleanData = [];
 
     if (resultCount > 0) {
-      let dateOfBirth = null;
+      let dobString = null;
       let nationality = null;
 
       cleanData.push({
@@ -284,7 +284,18 @@ export class SearchHelper {
       });
       array.forEach((elt, index) => {
         let name = '';
-        if (elt.entity.dateOfBirth) dateOfBirth = elt.entity.dateOfBirth;
+        if (elt.entity.dateOfBirth){
+          const dateOfBirth = elt.entity.dateOfBirth;
+          let day = '';
+          if (dateOfBirth.day != null) day = `${dateOfBirth.day}/`;
+          let month = '';
+          if(dateOfBirth.month != null) month = `${dateOfBirth.month}/`;
+          let year = '';
+          if(dateOfBirth.year != null) year = `${dateOfBirth.year}`;
+          //to string date
+          dobString = `${day}${month}${year}`;
+        } 
+
         if (elt.entity.nationality) nationality = elt.entity.nationality;
 
         if (
@@ -312,7 +323,7 @@ export class SearchHelper {
           style: 3,
           result: `${index}. (${elt.score}%) - ${name}`,
           sanction: elt.entity.sanction,
-          dob: dateOfBirth,
+          dob: dobString.trim(),
           nationality: nationality,
           link: `todoByFrontDev/${elt.entity.id}`,
         });

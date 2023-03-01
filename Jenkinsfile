@@ -7,5 +7,11 @@ pipeline {
       }
     }
 
+    stage('list repository contain') {
+      steps {
+        sh 'ls -la'
+      }
+    }
+
   }
 }

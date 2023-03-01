@@ -35,8 +35,19 @@ pipeline {
     }
 
     stage('Push') {
-      steps {
-        sh 'docker push unoteck/conformity-api:latest'
+      parallel {
+        stage('Push') {
+          steps {
+            sh 'docker push unoteck/conformity-api:latest'
+          }
+        }
+
+        stage('log') {
+          steps {
+            sh 'docker ls'
+          }
+        }
+
       }
     }
 

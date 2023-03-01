@@ -15,7 +15,7 @@ pipeline {
 
     stage('Build') {
       steps {
-        sh 'docker build -f conformity-api/Dockerfile .'
+        sh 'docker build -f ./Dockerfile .'
       }
     }
 

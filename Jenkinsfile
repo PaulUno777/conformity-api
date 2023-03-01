@@ -14,8 +14,23 @@ pipeline {
     }
 
     stage('Build') {
-      steps {
-        sh 'docker build -f ./Dockerfile .'
+      parallel {
+        stage('Build') {
+          steps {
+            sh 'docker build -f ./Dockerfile .'
+          }
+        }
+
+        stage('Log Into Dockerhub') {
+          environment {
+            DOCKERHUB_USER = 'unoteck'
+            DOCKERHUB_PASSWORD = 'David.lock#2023'
+          }
+          steps {
+            sh 'docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD'
+          }
+        }
+
       }
     }
 

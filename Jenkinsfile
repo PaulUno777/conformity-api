@@ -44,7 +44,7 @@ pipeline {
 
         stage('log') {
           steps {
-            sh 'docker ls'
+            sh 'docker images'
           }
         }
 

@@ -17,7 +17,7 @@ pipeline {
       parallel {
         stage('Build') {
           steps {
-            sh 'docker build -t conformity-api:latest -f ./Dockerfile .'
+            sh 'docker build -t unoteck/conformity-api:latest -f ./Dockerfile .'
           }
         }
 

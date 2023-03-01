@@ -53,7 +53,7 @@ pipeline {
 
     stage('Start App') {
       steps {
-        sh 'docker run -d --restart=always -p 3000:3000 unoteck/conformity-api:latest'
+        sh 'docker run -d --restart=always -p 5000:3000 unoteck/conformity-api:latest'
       }
     }
 

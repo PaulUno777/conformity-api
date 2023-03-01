@@ -7,7 +7,7 @@ pipeline {
       }
     }
 
-    stage('list repository contain') {
+    stage('log') {
       steps {
         sh 'ls -la'
       }

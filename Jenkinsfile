@@ -17,7 +17,7 @@ pipeline {
       parallel {
         stage('Build') {
           steps {
-            sh 'docker build -f ./Dockerfile .'
+            sh 'docker build -t conformity-api:latest -f ./Dockerfile .'
           }
         }
 

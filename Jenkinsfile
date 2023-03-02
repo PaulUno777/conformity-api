@@ -49,5 +49,11 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
       }
     }
 
+    stage('log2') {
+      steps {
+        sh 'cat ./.env;'
+      }
+    }
+
   }
 }

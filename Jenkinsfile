@@ -35,7 +35,7 @@ pipeline {
         PER_PAGE = '20'
         PORT = '3000'
         TIME_ZONE = '1'
-        FILE_LOCATION = './public/'
+        FILE_LOCATION = '\'./public/\''
         DOWNLOAD_URL = 'http://sandbox.kamix.io:3000'
       }
       steps {

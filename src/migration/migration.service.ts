@@ -8,43 +8,43 @@ export class MigrationService {
 
   //=========Main method for all Migrations================
   async migrateAllToMongo() {
-    // const resSantion = await this.migrateSantionToMongo();
-    // const resSantioned = await this.migrateSantionedToMongo();
-    // const resPlace = await this.migratePlaceOfBirthListToMongo();
+    const resSantion = await this.migrateSantionToMongo();
+    const resSantioned = await this.migrateSantionedToMongo();
+    const resPlace = await this.migratePlaceOfBirthListToMongo();
     const resDate = await this.migrateDateOfBirthListToMongo();
-    // const resNat = await this.migrateNationalityListToMongo();
-    // const resCit = await this.migrateCitizenshipListToMongo();
-    // const resAka = await this.migrateAkaListToMongo();
+    const resNat = await this.migrateNationalityListToMongo();
+    const resCit = await this.migrateCitizenshipListToMongo();
+    const resAka = await this.migrateAkaListToMongo();
 
     return [
-      // resSantion,
-      // resSantioned,
-      // resPlace,
+      resSantion,
+      resSantioned,
+      resPlace,
       resDate,
-      // resNat,
-      // resCit,
-      // resAka,
+      resNat,
+      resCit,
+      resAka,
     ];
   }
 
   //=========Main method for all Updates================
   async updateAllToMongo() {
-    // const resSantion = await this.updateSantionToMongo();
-    // const resSantioned = await this.updateSantionedToMongo();
-    // const resPlace = await this.updatePlaceOfBirthListToMongo();
+    const resSantion = await this.updateSantionToMongo();
+    const resSantioned = await this.updateSantionedToMongo();
+    const resPlace = await this.updatePlaceOfBirthListToMongo();
     const resDate = await this.updateDateOfBirthListToMongo();
-    // const resNat = await this.updateNationalityListToMongo();
-    // const resCit = await this.updateCitizenshipListToMongo();
-    // const resAka = await this.updateAkaListToMongo();
+    const resNat = await this.updateNationalityListToMongo();
+    const resCit = await this.updateCitizenshipListToMongo();
+    const resAka = await this.updateAkaListToMongo();
 
     return [
-      // resSantion,
-      // resSantioned,
-      // resPlace,
+      resSantion,
+      resSantioned,
+      resPlace,
       resDate,
-      // resNat,
-      // resCit,
-      // resAka,
+      resNat,
+      resCit,
+      resAka,
     ];
   }
 

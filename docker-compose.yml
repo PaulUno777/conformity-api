@@ -1,9 +1,10 @@
 version: "3"
 services:
   server:
-    container_name: sanction-api-server
+    container_name: kamix-sanction-service
     image: /server-image
     env_file:
       - .env
     ports:
-      - 5000:3000
+      - 5300:3300
+      - 5300:3000

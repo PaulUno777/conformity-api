@@ -57,7 +57,8 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
 
     stage('Start app') {
       steps {
-        sh '''yarn;
+        sh '''npm install yarn
+yarn;
 yarn build;
 yarn install --frozen-lockfile --production && yarn cache clean;
 start:prod;

@@ -49,19 +49,11 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
       }
     }
 
-    stage('log2') {
-      steps {
-        sh 'cat ./.env;'
-      }
-    }
-
     stage('Start app') {
       steps {
-        sh '''sudo npm install -g yarn;
-yarn;
-yarn build;
-yarn install --frozen-lockfile --production && yarn cache clean;
-start:prod;
+        sh '''npm install ;
+npm run build;
+npm run start:prod;
 '''
       }
     }

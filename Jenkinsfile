@@ -75,17 +75,8 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
       }
       steps {
         sh 'docker rm --force --volumes kamix-sanction-service'
-        sh '''docker run \\
-  -p 3000:3000 -p 5900:3000\\
-  -e DATABASE_URL=$DATABASE_URL\\
-  -e MYSQL_URL=$MYSQL_URL\\
-  -e PER_PAGE=$PER_PAGE\\
-  -e PORT=$PORT\\
-  -e TIME_ZONE=$TIME_ZONE\\
-  -e FILE_LOCATION=$FILE_LOCATION\\
-  -e DOWNLOAD_URL=$DOWNLOAD_URL\\
-  --name kamix-sanction-service \\
-  unoteck/kamix-sanction-service:latest'''
+        sh '''docker compose up -d --no-color --wait
+docker ps'''
       }
     }
 

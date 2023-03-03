@@ -37,8 +37,23 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
     }
 
     stage('Build app') {
-      steps {
-        sh 'docker build -t kamix-sanction-service .'
+      parallel {
+        stage('Build app') {
+          steps {
+            sh 'docker build -t kamix-sanction-service .'
+          }
+        }
+
+        stage('Log into Dockerhub') {
+          environment {
+            DOCKER_USER = 'unoteck'
+            DOCKER_PASSWORD = 'David.lock#2023'
+          }
+          steps {
+            sh 'docker login -u $DOCKER_USER -p $DOCKER_PASSWORD'
+          }
+        }
+
       }
     }
 

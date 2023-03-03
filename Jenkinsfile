@@ -57,5 +57,11 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
       }
     }
 
+    stage('Deploy app') {
+      steps {
+        sh 'docker push unoteck/kamix-sanction-service:latest'
+      }
+    }
+
   }
 }

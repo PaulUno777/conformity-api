@@ -2,8 +2,7 @@ version: "3"
 services:
   server:
     container_name: kamix-sanction-service
-    context: .
-    image: unoteck/kamix-sanction-service:latest
+    # image: unoteck/kamix-sanction-service:latest
     env_file:
       - .env
     ports:

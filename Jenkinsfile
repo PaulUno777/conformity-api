@@ -65,7 +65,7 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
 
     stage('start app') {
       steps {
-        sh 'docker-compose up -d'
+        sh 'sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose up -d'
       }
     }
 

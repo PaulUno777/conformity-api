@@ -7,24 +7,10 @@ pipeline {
       }
     }
 
-    stage('log') {
-      parallel {
-        stage('log') {
-          steps {
-            sh 'ls -la'
-          }
-        }
-
-        stage('Create dotenv file') {
-          steps {
-            sh '''touch .env;
-
-
-
-'''
-          }
-        }
-
+    stage('Log projet contain') {
+      steps {
+        sh '''touch .env;
+ls -la'''
       }
     }
 
@@ -46,15 +32,13 @@ echo PORT=${PORT} >> .env;
 echo TIME_ZONE=${TIME_ZONE} >> .env;
 echo FILE_LOCATION=${FILE_LOCATION} >> .env;
 echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
+        sh 'cat .env'
       }
     }
 
-    stage('Start app') {
+    stage('Build app') {
       steps {
-        sh '''npm install ;
-npm run build;
-npm run start:prod;
-'''
+        sh 'docker build -t kamix-sanction-service .'
       }
     }
 

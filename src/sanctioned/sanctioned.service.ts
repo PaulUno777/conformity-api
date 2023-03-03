@@ -8,7 +8,7 @@ export class SanctionedService {
 
   async findAll(page?: number): Promise<any> {
     //Elements per page
-    const PER_PAGE = Number(this.config.get('PER_PAGE'));
+    const PER_PAGE = Number(this.config.get('PER_PAGE')) ?? 20;
 
     const count: number = (await this.prisma.sanctioned.count()) | 0;
 

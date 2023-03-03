@@ -22,7 +22,7 @@ ls -la'''
         PORT = '3000'
         TIME_ZONE = '1'
         FILE_LOCATION = '\'./public/\''
-        DOWNLOAD_URL = 'http://sandbox.kamix.io:3000'
+        DOWNLOAD_URL = 'http://sandbox.kamix.io:3000/api/search/download/'
       }
       steps {
         sh '''echo DATABASE_URL=${DATABASE_URL} >> .env;

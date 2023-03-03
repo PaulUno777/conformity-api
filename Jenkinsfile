@@ -65,7 +65,12 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
 
     stage('start app') {
       steps {
-        sh 'sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose up -d'
+        sh '''docker run \\
+  -d\\
+  -p 3000:3000 \\
+  --name kamix-sanction-service \\
+  --env-file .env\\
+  unoteck/kamix-sanction-service:latest'''
       }
     }
 

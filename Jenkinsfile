@@ -67,7 +67,7 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
       steps {
         sh 'docker rm --force --volumes kamix-sanction-service'
         sh '''docker run \\
-  -p 3000:3000 5900:3000\\
+  -p 3000:3000 -p 5900:3000\\
   --name kamix-sanction-service \\
   --env-file .env\\
   unoteck/kamix-sanction-service:latest'''

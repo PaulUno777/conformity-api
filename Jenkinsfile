@@ -75,8 +75,8 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
       }
       steps {
         sh 'docker rm --force --volumes kamix-sanction-service'
-        sh '''docker compose up --no-color --wait
-docker ps'''
+        sh '''docker compose up --wait
+'''
       }
     }
 

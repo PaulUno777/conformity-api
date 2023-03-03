@@ -65,6 +65,7 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
 
     stage('start app') {
       steps {
+        sh 'docker rm --force --volumes kamix-sanction-service'
         sh '''docker run \\
   -d\\
   -p 3000:3000 \\

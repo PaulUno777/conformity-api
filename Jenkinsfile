@@ -64,12 +64,27 @@ echo DOWNLOAD_URL=${DOWNLOAD_URL} >> .env;'''
     }
 
     stage('start app') {
+      environment {
+        DATABASE_URL = '\'mongodb+srv://sanctionsexplorer:Sancti0nsP4ss@cluster0.nq3ns.gcp.mongodb.net/sanctionsexplorer?retryWrites=true&w=majority\''
+        MYSQL_URL = '{"host": "localhost", "user": "root", "database": "sanction_explorer", "password": "Admin123"}'
+        PER_PAGE = '20'
+        PORT = '3000'
+        TIME_ZONE = '0'
+        FILE_LOCATION = '\'./public/\''
+        DOWNLOAD_URL = '\'http://sandbox.kamix.io:3000/api/search/download/\''
+      }
       steps {
         sh 'docker rm --force --volumes kamix-sanction-service'
         sh '''docker run \\
   -p 3000:3000 -p 5900:3000\\
+  -e DATABASE_URL=$DATABASE_URL\\
+  -e MYSQL_URL=$MYSQL_URL\\
+  -e PER_PAGE=$PER_PAGE\\
+  -e PORT=$PORT\\
+  -e TIME_ZONE=$TIME_ZONE\\
+  -e FILE_LOCATION=$FILE_LOCATION\\
+  -e DOWNLOAD_URL=$DOWNLOAD_URL\\
   --name kamix-sanction-service \\
-  --env-file .env\\
   unoteck/kamix-sanction-service:latest'''
       }
     }

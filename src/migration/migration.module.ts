@@ -5,6 +5,6 @@ import { MigrationHelper } from './migration.helper';
 
 @Module({
   controllers: [MigrationController],
-  providers: [MigrationService, MigrationHelper]
+  providers: [MigrationService, MigrationHelper],
 })
 export class MigrationModule {}

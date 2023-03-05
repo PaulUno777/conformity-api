@@ -11,7 +11,12 @@ import {
   StreamableFile,
   Response,
 } from '@nestjs/common';
-import { ApiExcludeEndpoint, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiExcludeEndpoint,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import { SearchCompleteDto } from './dto/search.complete.dto';
 import { join } from 'path';

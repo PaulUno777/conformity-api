@@ -6,6 +6,7 @@ import { SearchCompleteDto } from './dto/search.complete.dto';
 import { Workbook } from 'exceljs';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
+import * as StringSimilarity from 'string-similarity';
 
 @Injectable()
 export class SearchHelper {
@@ -24,8 +25,12 @@ export class SearchHelper {
 
     if (result.dateOfBirth != null)
       entity['dateOfBirth'] = result.dateOfBirth.date;
-    if (result.nationality != null)
-      entity['nationality'] = result.nationality.country;
+    if (result.nationality != null){
+      const nationality = {}
+        if (result.nationality.code) nationality['code'] = result.nationality.code;
+        if (result.nationality.country) nationality['country'] = result.nationality.country;
+        entity['nationality'] = nationality;
+    }
 
     const score: number = this.setPercentage(result.score);
 
@@ -48,8 +53,14 @@ export class SearchHelper {
       entity['dateOfBirth'] = result.dateOfBirth.date;
     }
 
-    if (result.nationality != null)
-      entity['nationality'] = result.nationality.country;
+    if (result.nationality != null){
+      if (result.nationality != null){
+        const nationality = {}
+        if (result.nationality.code) nationality['code'] = result.nationality.code;
+        if (result.nationality.country) nationality['country'] = result.nationality.country;
+        entity['nationality'] = nationality;
+      }  
+    }
 
     const score: number = this.setPercentage(result.score);
 
@@ -110,23 +121,28 @@ export class SearchHelper {
       body.nationality.length > 0 &&
       body.nationality != null
     ) {
-      const nationalities: any = this.getBodyNationalityNames(body.nationality);
-      console.log('natinality filter ---> ');
-      const tempArray = [];
-      filteredData.forEach((value: any) => {
+      console.log('@ @ @ @ @ natinality filtering ---> @ @ @ @ @ \n');
+      const tempArray = filteredData.filter((value: any) => {
+        let test = false;
         if (value.entity.nationality) {
-          for (const element of nationalities) {
-            const test = this.checkNationality(
-              value.entity.nationality,
-              element,
+          if (value.entity.nationality.code) {
+            test = body.nationality.includes(value.entity.nationality.code);
+            console.log('$$$$$-----country code finded-----$$$$');
+            console.log(
+              { bobyCodes: body.nationality, code: value.entity.nationality.code },
+              '\n',
             );
-            if (test) {
-              tempArray.push(value);
-              break;
-            }
+          } else {
+            const nationalities: any = this.getBodyNationalityNames(body.nationality);
+            test = this.checkNationality(
+              value.entity.nationality.country,
+              nationalities,
+            );
           }
         }
+        return test;
       });
+
       filteredData = tempArray;
     }
 
@@ -284,17 +300,17 @@ export class SearchHelper {
       });
       array.forEach((elt, index) => {
         let name = '';
-        if (elt.entity.dateOfBirth){
+        if (elt.entity.dateOfBirth) {
           const dateOfBirth = elt.entity.dateOfBirth;
           let day = '';
           if (dateOfBirth.day != null) day = `${dateOfBirth.day}/`;
           let month = '';
-          if(dateOfBirth.month != null) month = `${dateOfBirth.month}/`;
+          if (dateOfBirth.month != null) month = `${dateOfBirth.month}/`;
           let year = '';
-          if(dateOfBirth.year != null) year = `${dateOfBirth.year}`;
+          if (dateOfBirth.year != null) year = `${dateOfBirth.year}`;
           //to string date
           dobString = `${day}${month}${year}`;
-        } 
+        }
 
         if (elt.entity.nationality) nationality = elt.entity.nationality;
 
@@ -355,21 +371,89 @@ export class SearchHelper {
       const tempArray = arrayFr.concat(arrayEn);
       result = result.concat(tempArray);
     });
+    console.log({code: result});
+    return result;
+  }
 
-    const filterd = result.filter((elt) => {
-      return elt.length > 3;
+  getNationalityNames(): object {
+    const typeNamesFr = i18nIsoCountries.getNames('fr');
+    const namesFr = Object.values(typeNamesFr);
+    const codesFr = Object.keys(typeNamesFr);
+    const cleanNamesFr = namesFr.map((value, index) => {
+      return {
+        code: codesFr[index],
+        name: value,
+      };
+    });
+    const typeNamesEn = i18nIsoCountries.getNames('en');
+    const namesEn = Object.values(typeNamesEn);
+    const codesEn = Object.keys(typeNamesEn);
+    const cleanNamesEn = namesEn.map((value, index) => {
+      return {
+        code: codesEn[index],
+        name: value,
+      };
     });
 
-    return filterd;
+    const names = cleanNamesFr.concat(cleanNamesEn);
+    const orderedNames = {
+      A: [],
+      B: [],
+      C: [],
+      D: [],
+      E: [],
+      F: [],
+      G: [],
+      H: [],
+      I: [],
+      J: [],
+      K: [],
+      L: [],
+      M: [],
+      N: [],
+      O: [],
+      P: [],
+      Q: [],
+      R: [],
+      S: [],
+      T: [],
+      U: [],
+      V: [],
+      W: [],
+      X: [],
+      Y: [],
+      Z: [],
+    };
+    names.forEach((elt) => {
+      const clean = elt.name.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+      const firstLetter = clean.charAt(0);
+      orderedNames[firstLetter].push({ code: elt.code, name: clean });
+      orderedNames[firstLetter].sort(
+          (a, b) => a.code.localeCompare(b.code),
+        );
+    });
+
+    fs.writeFile("./src/search/countries.json", JSON.stringify(orderedNames), err =>{
+      if (err) throw err; 
+      console.log("Done writing"); 
+    })
+    return orderedNames;
+  }
+
+  removeAccents(text: string): string {
+    return text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
   }
 
   transfarmName(name: string): string[] {
-    const tempArray = [];
-    if (name.trim().includes(' ')) {
-      return name.trim().split(' ');
+    const cleanedName = this.toCapitalizeWord(this.removeAccents(name.trim()));
+    let tempArray = [];
+    if (cleanedName.trim().includes(' ')) {
+      tempArray = cleanedName.trim().split(' ');
+      return tempArray.filter((item) =>{
+        if(item.length > 3) return item;
+      });
     } else {
-      tempArray.push(name.trim());
-      return tempArray;
+      return [cleanedName];
     }
   }
 
@@ -386,16 +470,48 @@ export class SearchHelper {
   }
 
   //transform score into percentage
-  checkNationality(santionedNationality: string, countryName): boolean {
-    const nationality = santionedNationality.toUpperCase();
-    const country = countryName.toUpperCase();
+  // checkNationality(santionedNationality: string, countryName): boolean {
+  //   const nationality = santionedNationality.toUpperCase();
+  //   const country = countryName.toUpperCase();
 
-    const test = nationality.includes(country) || country.includes(nationality);
+  //   const test = nationality.includes(country) || country.includes(nationality);
+  //   return test;
+  // }
+
+  checkNationality(santionedNationality: string, codeNationality: string[]): boolean {
+    const nationalities = this.transfarmName(santionedNationality);
+    console.log({sanctioned: nationalities});
+    let test = false;
+    nationalities.forEach((name) => {
+      for (const country of codeNationality){
+        const score = StringSimilarity.compareTwoStrings(
+          name,
+          country,
+        );
+        if (score > 0.8) {
+          console.log('$$$$$-----country name finded-----$$$$');
+          console.log({name: name, country: country,score: score}, '\n');
+          test = true;
+          break;
+        }
+      }
+    })
     return test;
   }
 
+  toCapitalizeWord(str: string): string {
+    const reg = /[- ]/;
+    const splitStr = str.toLowerCase().split(reg);
+    for (let i = 0; i < splitStr.length; i++) {
+      splitStr[i] =
+        splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+    }
+    // Directly return the joined string
+    return splitStr.join(' ');
+  }
+
   //transform score into percentage
-  setPercentage( score: number): number {
+  setPercentage(score: number): number {
     const data = score * 100;
     return Number(data.toFixed(2));
   }
